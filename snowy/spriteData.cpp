@@ -1,7 +1,7 @@
 #include "spriteData.h"
 #include "errorHandler.h"
-#include <limits>
 #include "screen.h"
+#include <limits>
 
 // empty sprite shell
 Sprite::Sprite() :
@@ -171,8 +171,7 @@ void Sprite::changeLayer(int layerNum) {
 	if(layerNum <= std::numeric_limits<int>::min() || layerNum >= std::numeric_limits<int>::max())
 		callError("Sprite method changeLayer error: invalid or out of range value");
 	onLayer = layerNum;
-	// Need to update the rendering order somehow. In screen.cpp the std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
-	// this is so weird ... but eh.
+	// make sortRendering a private function and make Sprite class a friend class.
 	Screen::get().sortTheRenderingLayers();
 }
 

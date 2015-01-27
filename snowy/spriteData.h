@@ -125,4 +125,6 @@ private:
 	Uint8 alphaVal;
 	// private function
 	void setCurrFrameRect();
+
+
 };

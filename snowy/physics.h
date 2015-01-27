@@ -1,8 +1,6 @@
 #pragma once
 #include <Box2D/Box2D.h>
 
-#include <iostream>
-
 class Physics {
 public:
 	// retrieves the Physics object
@@ -15,7 +13,7 @@ public:
 	// createWorld(float) has to be called first, else this function will do nothing.
 	void createParticles();
 
-	// gets access to the update step variable TimeStep. Default value is (1.0f / 60.0f);
+	// gets access to the update step variable TimeStep. Default value is (1.0f / 60.0f) i.e. 60Hz;
 	float32& getTimeStep();
 
 	// gets access to the update step variable VelocityIterations. Default value is 5.

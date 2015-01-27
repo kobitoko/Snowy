@@ -1,6 +1,5 @@
 #include "screen.h"
 #include "errorHandler.h"
-#include <algorithm>
 
 Screen::Screen() {
 	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -13,10 +12,8 @@ Screen::Screen() {
 		std::string errmsg = "IMG_Init error: " + std::string(IMG_GetError());
 		callError(errmsg);
 	}
-	// inheriting for convenience of include reduction sake, hence protected inheritance.
 	// perhaps later make a screen into "sprites" to handle split screen? idk.
 	//  ^ works fine with multiple texture to render on. which will be rendered on window then.
-	Sprite();
 	win = nullptr;
 	fps = 0;
 	screenRend = nullptr;
@@ -171,7 +168,7 @@ void Screen::removeImg(const char* name) {
 }
 
 float Screen::getFps() const {
-	float averageFrame = frameSum / 50.0f;
+	float averageFrame = static_cast<float>(frameSum) / 50.0f;
 	return (1000.0f / averageFrame);
 }
 
@@ -180,6 +177,3 @@ Screen& Screen::get() {
 	return screenObj;
 }
 
-void Screen::sortTheRenderingLayers() {
-	  std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
-}

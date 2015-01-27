@@ -1,6 +1,6 @@
 #pragma once
-#include <SDL2/SDL.h>
 #include <unordered_map>
+#include <SDL2/SDL.h>
 
 // Mouse action names, use mouse::x etc. because to reduce namespace pollution.
 enum class MouseVals : int {COORDS, RELMOT, WHEEL};

@@ -3,9 +3,11 @@
 #include <SDL2/SDL_image.h>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "spriteData.h"
 
-class Screen : protected Sprite {
+class Screen {
+	friend class Sprite;
 public:
 
 	~Screen();
@@ -49,8 +51,6 @@ public:
 	// retrieves the screen object
 	static Screen& get();
 
-	void sortTheRenderingLayers();
-
 private:
 	SDL_Window *win;
 	SDL_Rect cameraView, rectDummy;
@@ -67,6 +67,7 @@ private:
 	std::map<const char*, SDL_Texture*> allSprTex;
 	std::map<const char*, Sprite> allSprObj;
 	std::vector<Sprite*> spritesToRender;
+
 	// functor for sort by layers, returns true if lhs is smaller than rhs.
 	class isLessLayer{
 	public:
@@ -74,6 +75,13 @@ private:
 				return (lhs->getLayer() < rhs->getLayer());
 		}
 	} lessLayer;
+
+	// sorting the layers function
+	void sortTheRenderingLayers() {
+		  std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
+	}
+
+
 	// Prevents from making more Screen objects, the object should be retrieved with Screen::get();
 	Screen();
 };
