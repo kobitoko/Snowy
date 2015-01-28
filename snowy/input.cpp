@@ -1,5 +1,4 @@
 #include "input.h"
-
 #include "errorHandler.h"
 
 Input::Input() {
