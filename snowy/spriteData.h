@@ -36,6 +36,7 @@ public:
 	void setNextFrame();
 
 	// set frame to a specific frame, counting starts at 0, so n-1 where n is the total # of frames.
+  // Note that it gets overwritten by custom frame when a custom frame order is defined and setNextFrame() is called.
 	void setFrame(int frameNum);
 
 	// the layer that is bigger will be drawn first.

@@ -45,6 +45,8 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
 	posStretch.y = 0;
 	posStretch.w = frameSize.w;
 	posStretch.h = frameSize.h;
+  
+  frameOrder.clear();
 }
 
 // Copy Constructor
@@ -121,13 +123,13 @@ void Sprite::setNextFrame() {
 		// only draw if frame is more than frame delay.
 		if(frameSuspended >= frameLonger) {
 			// set next frame number
-			if(frameOrder.empty())
-				++currFrame;
-			else {
-				++currCustomFrame;
+			if(!frameOrder.empty()) {
+        ++currCustomFrame;
 				if(static_cast<size_t>(currCustomFrame) >= frameOrder.size())
 					currCustomFrame = 0;
 				currFrame = frameOrder[currCustomFrame];
+			} else {
+        ++currFrame;
 			}
 			// actually change the frame
 			setCurrFrameRect();
@@ -140,11 +142,8 @@ void Sprite::setNextFrame() {
 void Sprite::setFrame(int frameNum) {
 	if(frameNum >= (maxFrames) || frameNum < 0)
 		callError("Sprite method setFrame error: parameter has an invalid value.");
-	// if custom frame order is defined, then change current custom frame as it overrides currFrame
-	if(!frameOrder.empty())
-		currCustomFrame = frameNum;
-	else
-		currFrame = frameNum;
+	// if custom frame order is defined, then change gets overwritten by custom frame
+	currFrame = frameNum;
 	// if it is not animated sprite, change the frameRect now since setNextFrame will not do it.
 	if(!isAnim)
 		setCurrFrameRect();
@@ -256,5 +255,7 @@ void Sprite::setCurrFrameRect() {
 	}
 	else if(currFrame >= maxFramesHor)
 		currFrameRect.y = (currFrame/maxFramesHor) * frameSize.h;
+	else if(currFrame < maxFramesHor)
+		currFrameRect.y = 0;
 	currFrameRect.x = ((currFrame % maxFramesHor) * frameSize.w);
 }
