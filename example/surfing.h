@@ -1,8 +1,7 @@
 #pragma once
 
-#include<iostream>
+#include <iostream>
 #include <vector>
-#include <boost/lexical_cast.hpp>
 #include "../snowy/snowy.h"
 
 // tests

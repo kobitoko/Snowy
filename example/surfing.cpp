@@ -1,4 +1,6 @@
 #include "surfing.h"
+#include <string>
+#include <sstream>
 
 // SDL2 needs main() to be main(int argc, char * argv[]) and not the simple main()
 // https://wiki.libsdl.org/FAQWindows#I_get_.22Undefined_reference_to_.27SDL_main.27.22_...
@@ -7,7 +9,7 @@ int main(int argc, char * argv[]) {
 	std::cout << "Hi there!" << std::endl;
 
 	// writes an error log, if 2nd parameter is false it will not crash the game.
-	callError("Hello World!",false);
+	callError("Hello World!", false);
 
 	Uint32 gameTime = SDL_GetTicks();
 	// the core game updates will be capped at 60fps
@@ -38,8 +40,13 @@ int main(int argc, char * argv[]) {
 	while(running) {
 
 		if(SDL_TICKS_PASSED(SDL_GetTicks(), gameTime)) {
-			//std::cout << "FPS:" << Screen::get().getFps() << std::endl;
-			winName = "Surf! - FPS:" + boost::lexical_cast<std::string>(Screen::get().getFps());
+			std::cout << "FPS:" << Screen::get().getFps() << "\r";
+			//MinGW has an issue with std::to_string -> http://stackoverflow.com/questions/22571838/gcc-4-8-1-stdto-string-error
+			//winName = "Surf! - FPS:" + std::to_string(Screen::get().getFps());
+			std::ostringstream winNameFps;
+			winNameFps << "FPS:" << Screen::get().getFps();
+			std::string winName = "Surf!" + winNameFps.str();
+
 			SDL_SetWindowTitle(Screen::get().getWindow(), winName.c_str());
 
 			//Later just perhaps make events seperately on which Input class works on????
@@ -245,7 +252,10 @@ void testParticles() {
 
 		Physics::get().getParticles()->CreateParticle(pd);
 
-		std::string name = "drop" + boost::lexical_cast<std::string>(bucket.size()+1);
+		//std::string name = "drop" + std::to_string(bucket.size()+1);
+		std::ostringstream stream;
+		stream << bucket.size()+1;
+		std::string name = "drop" + stream.str();
 		Screen::get().duplicateSprite(name.c_str(),"drop");
 		bucket.push_back(name);
 	}else if(!Input::get().mouseKeyStatus(SDL_BUTTON_LEFT)) {
