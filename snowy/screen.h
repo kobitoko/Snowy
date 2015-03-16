@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include "spriteData.h"
 
@@ -64,8 +64,8 @@ private:
 	int frameIndx;
 	Uint32* frameList;
 
-	std::map<const char*, SDL_Texture*> allSprTex;
-	std::map<const char*, Sprite> allSprObj;
+	std::unordered_map<const char*, SDL_Texture*> allSprTex;
+	std::unordered_map<const char*, Sprite> allSprObj;
 	std::vector<Sprite*> spritesToRender;
 
 	// functor for sort by layers, returns true if lhs is smaller than rhs.
