@@ -31,17 +31,12 @@ Sound::~Sound() {
 	Mix_Quit();
 }
 
-Sound& Sound::get() {
-	static Sound sndMaster;
-	return sndMaster;
-}
-
 int Sound::loadMusic(const char* musicName, const char* fileName) {
 	if(bgm.count(musicName) > 0)
 		return 0;
 	bgm[musicName] = Mix_LoadMUS(fileName);
 	if(bgm[musicName] == nullptr)	{
-		std::string errmsg = "Sound method loadMusic error: " + std::string(Mix_GetError());
+		std::string errmsg = "Sound method loadMusic error for " + toStr(musicName) + ": " + std::string(Mix_GetError());
 		callError(errmsg);
 	}
 	return 1;
@@ -66,7 +61,7 @@ int Sound::loadSFX(const char* sfxName, const char* fileName) {
 		return 0;
 	sfx[sfxName] = Mix_LoadWAV(fileName);
 	if(sfx[sfxName] == nullptr)	{
-		std::string errmsg = "Sound method loadMusic error: " + std::string(Mix_GetError());
+		std::string errmsg = "Sound method loadSFX error for "  + toStr(sfxName) + ": " + std::string(Mix_GetError());
 		callError(errmsg);
 	}
 	return 1;

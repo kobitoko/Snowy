@@ -8,9 +8,8 @@ enum class MouseVals : int {COORDS, RELMOT, WHEEL};
 class Input
 {
 public:
-
-	// retrieve the input object
-	static Input& get();
+    // create an input object
+    Input();
 
 	// updates the containers containing some data of inputs.
 	void updateInput();
@@ -39,6 +38,4 @@ private:
 	std::unordered_map <Uint8, bool> mouseActionStatus;
 	std::unordered_map <int, std::pair<Sint32, Sint32> > mouseValues;
 
-	// only 1 of these should be ever made?
-	Input();
 };

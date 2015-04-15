@@ -2,6 +2,9 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
+//forward declare
+class Screen;
+
 class Sprite {
 public:
 	Sprite();
@@ -39,17 +42,20 @@ public:
   // Note that it gets overwritten by custom frame when a custom frame order is defined and setNextFrame() is called.
 	void setFrame(int frameNum);
 
-	// the layer that is bigger will be drawn first.
-	void changeLayer(int layer);
-
-	// retrieve the layer that the sprite is on.
-	int getLayer() const;
-
 	// retrieve the sprite's name.
 	const char* getName() const;
 
+	// change the sprite's name, returns the new name.
+    const char* setName(const char* newName);
+
 	// retrieve the location string of the image that this sprite uses.
 	const char* getImgName() const;
+
+    // returns the layer number the sprite prefers to be on.
+    int getLayer() const;
+
+    // sets the layer number the sprite prefers to be on.
+    void setLayer(int layerNum);
 
 	// get the position and stretch of the sprite.
 	const SDL_Rect* getPos() const;
@@ -126,6 +132,5 @@ private:
 	Uint8 alphaVal;
 	// private function
 	void setCurrFrameRect();
-
 
 };

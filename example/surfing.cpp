@@ -21,7 +21,12 @@ int main(int argc, char * argv[]) {
 	w = 800;
 	h = 600;
 
-	Screen::get().makeWindow(x,y,w,h,"Surf!", 30);
+    scr = Screen();
+    in = Input();
+    snd = Sound();
+    phy = Physics();
+
+	scr.makeWindow(x,y,w,h,"Surf!");
 	//SDL_SetWindowBordered(window.getWindow(),SDL_FALSE);
 	std::string winName = "Surf!";
 
@@ -40,51 +45,52 @@ int main(int argc, char * argv[]) {
 	while(running) {
 
 		if(SDL_TICKS_PASSED(SDL_GetTicks(), gameTime)) {
-			std::cout << "FPS:" << Screen::get().getFps() << "\r";
+			//std::cout << "FPS:" << scr.getFps() << "\r";
 			//MinGW has an issue with std::to_string -> http://stackoverflow.com/questions/22571838/gcc-4-8-1-stdto-string-error
-			//winName = "Surf! - FPS:" + std::to_string(Screen::get().getFps());
-			std::ostringstream winNameFps;
-			winNameFps << "FPS:" << Screen::get().getFps();
-			std::string winName = "Surf!" + winNameFps.str();
-
-			SDL_SetWindowTitle(Screen::get().getWindow(), winName.c_str());
+			//winName = "Surf! - FPS:" + std::to_string(scr.getFps());
+			//std::ostringstream winNameFps;
+			//winNameFps << "FPS:" << scr.getFps();
+			//std::string winName = "Surf!" + winNameFps.str();
+			//SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
 
 			//Later just perhaps make events seperately on which Input class works on????
 			// or custom events class to handle user events.
-			Input::get().updateInput();
+			in.updateInput();
 
 			// update physics, 2 times to prevent slowmotion water but requires more computation.
-			Physics::get().update();
-			Physics::get().update();
+			phy.update();
+			phy.update();
 
 			// physics and particle testing
 			testPhysics(theBody);
 			testParticles();
 
 			// Test input
-			running = testInput(Input::get());
+			running = testInput();
+
+            // update screen.
+            scr.update();
 
 			gameTime = SDL_GetTicks() + msPerFrame;
 		}
-		// update graphics  Graphics has its own ticks that go with your given desired FPS to render. In this example it is capped at 30fps.
-		Screen::get().update();
 	}
+
 	SDL_Quit();
 	return 0;
 }
 
 // Tests' Function definitions --------------------------------------------------
 
-bool testInput(Input input) {
+bool testInput() {
 	// Test keyboard keys
-	if(input.keyStatus(SDLK_q)) {
+	if(in.keyStatus(SDLK_q)) {
 		std::cout << SDL_GetKeyName(SDLK_q) << std::endl << "Bye" << std::endl;
 		//running = false;
 		return false;
 	}
 
 	// Test window's buttons
-	if(input.windowStatus(SDL_WINDOWEVENT_CLOSE)) {
+	if(in.windowStatus(SDL_WINDOWEVENT_CLOSE)) {
 		std::cout << "Window Closed." << std::endl;
 		//running = false;
 		return false;
@@ -94,57 +100,94 @@ bool testInput(Input input) {
 
 void loadMySprites() {
 	// the background image
-	Screen::get().loadImg("bgImg", bgSrc);
-	Screen::get().makeSprite("bg", "bgImg", -1);
-	Screen::get().spriteData("bg")->setStretch(800, 600);
+	scr.loadImg("bgImg", bgSrc);
+	scr.makeSprite("bg", "bgImg", -1);
+	scr.spriteData("bg")->setStretch(800, 600);
+    scr.addSpriteToRender("bg");
+
+    // test font
+    TTF_Font* font = TTF_OpenFontIndex("example/kenpixel_mini_square.ttf", 18, 0);
+    TTF_Font* font2 = TTF_OpenFontIndex("example/kenpixel_mini_square.ttf", 11, 0);
+    SDL_Color colr;
+    colr.a = 255;
+    colr.r = 0;
+    colr.g = 0;
+    colr.b = 0;
+    scr.text("testTxt1", "Hello there!", font, colr, 200, 50, 0, 0, true);
+    scr.text("mouseTxt", "Click & hold for \"water\"", font2, colr, 0, 0, 10, 0, true);
+    TTF_CloseFont(font);
+    TTF_CloseFont(font2);
 
 	// the box
-	Screen::get().loadImg("boxImg", boxSrc);
-	Screen::get().makeSprite("box","boxImg", 1);
-	Screen::get().spriteData("box")->setPos(20,100);
+	scr.loadImg("boxImg", boxSrc);
+	scr.makeSprite("box","boxImg", 1);
+	scr.spriteData("box")->setPos(20,100);
+    scr.addSpriteToRender("box");
 
-	// the water mother sprite to duplicate from
-	Screen::get().loadImg("blob", blobSrc);
-	Screen::get().makeSprite("drop","blob", 0);
-	Screen::get().spriteData("drop")->setPos(-10, -10);
+	// the water mother sprite to duplicate from.
+	scr.loadImg("blob", blobSrc);
+	scr.makeSprite("drop","blob", 0);
 
 	// the meteor
-	Screen::get().loadImg("meteorImg", meteorSrc);
+	scr.loadImg("meteorImg", meteorSrc);
 	SDL_Rect rect;
 	rect.x = rect.y = 0;
 	rect.w = 232;
 	rect.h = 400;
-	Screen::get().makeSprite("meteor","meteorImg", 3, &rect);
+	scr.makeSprite("meteor","meteorImg", 0, &rect);
 	std::vector<int>myFrameOrder({0,1,2,3,4,5,6,7,8,9,10});
-	Screen::get().spriteData("meteor")->customFrameOrder(myFrameOrder);
-	Screen::get().spriteData("meteor")->setStretch(116, 200);
-	Screen::get().spriteData("meteor")->setAlpha(222);
+	scr.spriteData("meteor")->customFrameOrder(myFrameOrder);
+	scr.spriteData("meteor")->setStretch(116, 200);
+	scr.spriteData("meteor")->setAlpha(222);
+	scr.addSpriteToRender("meteor");
+
+	scr.duplicateSprite("meteorThe2nd", "meteor", true);
+	scr.spriteData("meteorThe2nd")->setStretch(80, 150);
+	scr.spriteData("meteorThe2nd")->setAlpha(100);
+	scr.spriteData("meteorThe2nd")->setPos(20,100);
+	scr.changeLayer("meteorThe2nd", 3);
+
+    // print all the images and sprites.
+    std::vector<std::string> a = scr.getAllSpriteNames();
+    std::cout << "-----------allSprites at startup-----------" << std::endl;
+    for(auto& aa : a)
+        std::cout << aa << std::endl;
+
+    std::vector<std::string> b = scr.getAllImageNames();
+    std::cout << "-----------all Images at startup-----------" << std::endl;
+    for(auto& bb : b)
+        std::cout << bb << std::endl;
+
+    std::vector<std::string> c = scr.getRenderSpriteNames();
+	std::cout << "-----------RenderedSprites at startup-----------" << std::endl;
+    for(auto& cc : c)
+        std::cout << cc << std::endl;
 }
 
 b2Body* loadMyPhysics() {
 	// from http://google.github.io/liquidfun/Programmers-Guide/html/md__chapter02__hello__box2_d.html
-	Physics::get().createWorld(b2Vec2(0.0f, 9.80665f));
+	phy.createWorld(b2Vec2(0.0f, 9.80665f));
 	// GROUND BOX
 	b2BodyDef groundBodyDef;
 	groundBodyDef.position.Set(40.0f, -0.5f);
-	b2Body* groundBody = Physics::get().getWorld()->CreateBody(&groundBodyDef);
+	b2Body* groundBody = phy.getWorld()->CreateBody(&groundBodyDef);
 	b2PolygonShape groundBox;
 	// units is from midcenter. Box is actually 100m*20m.
 	groundBox.SetAsBox(40.0f, 0.5f);
 	groundBody->CreateFixture(&groundBox, 0.0f);
 	// top wall
 	groundBodyDef.position.Set(40.0f, 60.5f);
-	groundBody = Physics::get().getWorld()->CreateBody(&groundBodyDef);
+	groundBody = phy.getWorld()->CreateBody(&groundBodyDef);
 	groundBox.SetAsBox(40.0f, 0.5f);
 	groundBody->CreateFixture(&groundBox, 0.0f);
 	// Left wall
 	groundBodyDef.position.Set(-0.5f, 30.0f);
-	groundBody = Physics::get().getWorld()->CreateBody(&groundBodyDef);
+	groundBody = phy.getWorld()->CreateBody(&groundBodyDef);
 	groundBox.SetAsBox(0.5f, 30.0f);
 	groundBody->CreateFixture(&groundBox, 0.0f);
 	// Right wall
 	groundBodyDef.position.Set(80.5f, 30.0f);
-	groundBody = Physics::get().getWorld()->CreateBody(&groundBodyDef);
+	groundBody = phy.getWorld()->CreateBody(&groundBodyDef);
 	groundBox.SetAsBox(0.5f, 30.0f);
 	groundBody->CreateFixture(&groundBox, 0.0f);
 
@@ -153,7 +196,7 @@ b2Body* loadMyPhysics() {
 	// body type must be set to b2_dynamicBody if the body should move in response to forces.
 	bodyDef.type = b2_dynamicBody;
 	bodyDef.position.Set(20.0f, 10.0f);
-	b2Body* body = Physics::get().getWorld()->CreateBody(&bodyDef);
+	b2Body* body = phy.getWorld()->CreateBody(&bodyDef);
 	b2PolygonShape dynamicBox;
 	dynamicBox.SetAsBox(2.5f, 2.5f);
 	b2FixtureDef fixtureDef;
@@ -163,9 +206,9 @@ b2Body* loadMyPhysics() {
 	fixtureDef.friction = 1.0f;
 	body->CreateFixture(&fixtureDef);
 
-	//Physics::get().getTimeStep() = 1.0f / 30.0f;
-	Physics::get().getVelocityIterations() = 3;
-	Physics::get().getPositionsIterations() = 5;
+	//phy.getTimeStep() = 1.0f / 30.0f;
+	phy.getVelocityIterations() = 3;
+	phy.getPositionsIterations() = 5;
 
 	return body;
 }
@@ -179,19 +222,19 @@ void testPhysics(b2Body* body) {
 	float32 angle = body->GetAngle();
 
 	// converting into screen coordinates 10m = 100px.
-	Screen::get().spriteData("box")->rotation(angle*(180/3.141592));
-	Screen::get().spriteData("box")->setPos(MTOPX*(position.x - center.x), MTOPX*(position.y - center.y));
+	scr.spriteData("box")->rotation(angle*(180/3.141592));
+	scr.spriteData("box")->setPos(MTOPX*(position.x - center.x), MTOPX*(position.y - center.y));
 	// up force
-	if(Input::get().keyStatus(SDLK_UP))
+	if(in.keyStatus(SDLK_UP))
 		body->ApplyLinearImpulse(b2Vec2(0.0f,-10.0f), body->GetPosition(), true);
 	// down force
-		if(Input::get().keyStatus(SDLK_DOWN))
+		if(in.keyStatus(SDLK_DOWN))
 			body->ApplyLinearImpulse(b2Vec2(0.0f,10.0f), body->GetPosition(), true);
 	// right force
-	if(Input::get().keyStatus(SDLK_LEFT))
+	if(in.keyStatus(SDLK_LEFT))
 			body->ApplyLinearImpulse(b2Vec2(-10.0f,0.0f), body->GetPosition(), true);
 	// left force
-	if(Input::get().keyStatus(SDLK_RIGHT))
+	if(in.keyStatus(SDLK_RIGHT))
 			body->ApplyLinearImpulse(b2Vec2(10.0f,0.0f), body->GetPosition(), true);
 
 }
@@ -200,65 +243,76 @@ void testPhysics(b2Body* body) {
 void loadMySounds() {
 	// Recommend to use OGG. Mp3 had some weird things like some dont work & froze since probably different mp3 encodings.
 	// Flac and Wav can be used too, downside is that they're big in filesize.
-	Sound::get().loadMusic("music", bgm);
-	Sound::get().loadSFX("waterSnd", sfx);
+	snd.loadMusic("music", bgm);
+	snd.loadSFX("waterSnd", sfx);
 
 	// start playing the music and set volume of music to 50%
-	Mix_FadeInMusic(Sound::get().getMusic("music"), -1, 2000);
+	Mix_FadeInMusic(snd.getMusic("music"), -1, 2000);
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
 }
 
 void loadMyParticles() {
-	Physics::get().createParticles();
-	Physics::get().getParticles()->SetGravityScale(static_cast<float32>(2.0f));
-	Physics::get().getParticles()->SetRadius(0.6f);
-	Physics::get().getParticles()->SetDensity(1.0f);
+	phy.createParticles();
+	phy.getParticles()->SetGravityScale(static_cast<float32>(2.0f));
+	phy.getParticles()->SetRadius(0.6f);
+	phy.getParticles()->SetDensity(1.0f);
 	// radius 1 default, the smaller radius, the more particles needed to fill something -> performance hit.
-	Physics::get().getParticleIterations() = b2CalculateParticleIterations(9.80556f, 0.6f, 1.0f/60.0f);
+	phy.getParticleIterations() = b2CalculateParticleIterations(9.80556f, 0.6f, 1.0f/60.0f);
 }
 
 void testParticles() {
 	// BUG: This doesnt remove sprites propperly. Sometimes no sprites come due to some already existing so we get invisible water.
 	for(size_t j=0; j< bucket.size(); ++j) {
-		float radius = Physics::get().getParticles()->GetRadius();
-		double xLoc = round(MTOPX * (Physics::get().getParticles()->GetPositionBuffer()[j].x - radius));
-		double yLoc = round(MTOPX * (Physics::get().getParticles()->GetPositionBuffer()[j].y - radius));
+		float radius = phy.getParticles()->GetRadius();
+		double xLoc = round(MTOPX * (phy.getParticles()->GetPositionBuffer()[j].x - radius));
+		double yLoc = round(MTOPX * (phy.getParticles()->GetPositionBuffer()[j].y - radius));
 
-		if(Physics::get().getParticles()->GetExpirationTimeBuffer()[j] <= 1
-				&& Screen::get().spriteData(bucket[j].c_str()) != nullptr) {
-			//Screen::get().removeSprite(Screen::get().spriteData(bucket[j].c_str())->getName());
-			//temp fix for not deleting sprite. Nope doesnt work either...
+        // GetExpirationTimeBuff just gets expiration time, doesn't tell you if it's about to be destroyed or not, use the callback b2DestructionListener::SayGoodbye
+		if(phy.getParticles()->GetExpirationTimeBuffer()[j] <= 1
+				&& scr.spriteData(bucket[j].c_str()) != nullptr) {
+			scr.removeSprite(scr.spriteData(bucket[j].c_str())->getName());
 			bucket[j] = bucket.back();
 			bucket.back() = "";
 			bucket.pop_back();
 			--j;
 		}
-		if(Screen::get().spriteData(bucket[j].c_str()) != nullptr) {
-			Screen::get().spriteData(bucket[j].c_str())->setPos(static_cast<int>(xLoc), static_cast<int>(yLoc));
+		if(scr.spriteData(bucket[j].c_str()) != nullptr) {
+			scr.spriteData(bucket[j].c_str())->setPos(static_cast<int>(xLoc), static_cast<int>(yLoc));
 		}
 	}
+	// get mouse coordinates and make text follow mouse
+	std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
+	scr.spriteData("mouseTxt")->setPos(coords.first, coords.second);
+
 	// make water
-	if(Input::get().mouseKeyStatus(SDL_BUTTON_LEFT)) {
+	if(in.mouseKeyStatus(SDL_BUTTON_LEFT)) {
 		// play water sound if it is not already playing
 		if(!Mix_Playing(1))
-			Mix_PlayChannel(1, Sound::get().getSFX("waterSnd"), 0);
+			Mix_PlayChannel(1, snd.getSFX("waterSnd"), 0);
 		// create them at the mouse cursor
-		std::pair<Sint32, Sint32> coords = Input::get().getMouseValues(MouseVals::COORDS);
 		b2ParticleDef pd;
-		pd.lifetime = 60;
+		pd.lifetime = 120;
 		pd.flags = b2_springParticle;
 		pd.velocity = b2Vec2(0.0f, 5.0f);
 		pd.position.Set(coords.first / MTOPX, coords.second / MTOPX);
 
-		Physics::get().getParticles()->CreateParticle(pd);
+		phy.getParticles()->CreateParticle(pd);
 
 		//std::string name = "drop" + std::to_string(bucket.size()+1);
 		std::ostringstream stream;
-		stream << bucket.size()+1;
-		std::string name = "drop" + stream.str();
-		Screen::get().duplicateSprite(name.c_str(),"drop");
+		stream << "drop" << bucket.size()+1;
+		std::string name = stream.str();
+		scr.duplicateSprite(name.c_str(),"drop", true);
+		scr.spriteData(name.c_str())->setPos(coords.first, coords.second);
 		bucket.push_back(name);
-	}else if(!Input::get().mouseKeyStatus(SDL_BUTTON_LEFT)) {
+
+		//print the names of all the water
+        /*std::vector<std::string> c = scr.getRenderSpriteNames();
+        std::cout << "-----------RenderedSprites-----------" << std::endl;
+        for(auto& cc : c)
+            std::cout << cc << std::endl;
+        */
+	}else if(!in.mouseKeyStatus(SDL_BUTTON_LEFT)) {
 		// stop water sound if not holding left mouse button.
 		Mix_HaltChannel(1);
 	}

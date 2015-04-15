@@ -8,11 +8,6 @@ Input::Input() {
 	}
 }
 
-Input& Input::get() {
-	static Input inputMaster;
-	return inputMaster;
-}
-
 void Input::updateInput() {
 	while(SDL_PollEvent(&event)) {
 		switch(event.type) {

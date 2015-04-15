@@ -3,8 +3,9 @@
 
 class Physics {
 public:
-	// retrieves the Physics object
-	static Physics& get();
+    // create a Physics object
+    Physics();
+    Physics(float gravityY, float gravityX = 0.0f, float timeStep = 1.0f/60.0f, int32 velIteration = 5, int32 posIteration = 3, float particleRadius = 1.0f);
 
 	// Creates only once a physics world with given gravity. Does nothing upon multiple calls.
 	void createWorld(b2Vec2 gravityGiven);
@@ -42,12 +43,11 @@ private:
 	b2World* world;
 	b2ParticleSystem* particlesWorld;
 	//= 1.0f / 1000.0f;
-	float32 timeStep;
+	float32 timeStepping;
 	// recommended iterations is 8 total. 5 velocity and 3 position. b2CalculateParticleIterations(-9.80665f, 0.8f, timeStep)
 	int32 velocityIterations;
 	int32 positionsIterations;
 	int32 particleIterations;
 
-	Physics();
 };
 

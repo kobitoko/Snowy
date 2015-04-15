@@ -6,7 +6,7 @@
 class Sound {
 public:
 	// returns a reference to the sound object. By it has 8 channels to play sounds on. Music has its own channel.
-	static Sound& get();
+    Sound();
 
 	~Sound();
 
@@ -43,6 +43,4 @@ private:
 	// sound effect
 	std::map<const char*,Mix_Chunk*> sfx;
 
-	// functions
-	Sound();
 };

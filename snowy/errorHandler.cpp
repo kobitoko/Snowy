@@ -19,3 +19,4 @@ void callError(std::string msg, bool quit) {
 		exit(EXIT_FAILURE);
 	}
 }
+

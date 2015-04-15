@@ -5,10 +5,20 @@ Physics::Physics() {
 	gravity.Set(0.0f, 9.80665f);
 	world = nullptr;
 	particlesWorld = nullptr;
-	timeStep = 1.0f / 60.0f;
+	timeStepping = 1.0f / 60.0f;
 	velocityIterations = 5;
 	positionsIterations = 3;
-	particleIterations = b2CalculateParticleIterations(gravity.y, 1.0f, timeStep);
+	particleIterations = b2CalculateParticleIterations(gravity.y, 1.0f, timeStepping);
+}
+
+Physics::Physics(float gravityY, float gravityX, float timeStep, int32 velIteration, int32 posIteration, float particleRadius) {
+	gravity.Set(gravityX, gravityY);
+	world = nullptr;
+	particlesWorld = nullptr;
+	timeStepping = timeStep;
+	velocityIterations = velIteration;
+	positionsIterations = posIteration;
+	particleIterations = b2CalculateParticleIterations(gravity.y, particleRadius, timeStepping);
 }
 
 void Physics::createWorld(b2Vec2 gravityGiven) {
@@ -26,7 +36,7 @@ void Physics::createParticles() {
 }
 
 float32& Physics::getTimeStep() {
-	return timeStep;
+	return timeStepping;
 }
 
 int32& Physics::getVelocityIterations() {
@@ -44,17 +54,12 @@ int32& Physics::getParticleIterations() {
 void Physics::update() {
 	// loop
 	if(particlesWorld != nullptr) {
-		world->Step(timeStep, velocityIterations, positionsIterations, particleIterations);
+		world->Step(timeStepping, velocityIterations, positionsIterations, particleIterations);
 		world->ClearForces();
 	}else if(world != nullptr) {
-		world->Step(timeStep, velocityIterations, positionsIterations);
+		world->Step(timeStepping, velocityIterations, positionsIterations);
 		world->ClearForces();
 	}
-}
-
-Physics& Physics::get() {
-	static Physics worldMaster;
-	return worldMaster;
 }
 
 b2World* Physics::getWorld() {

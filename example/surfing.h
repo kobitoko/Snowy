@@ -5,7 +5,7 @@
 #include "../snowy/snowy.h"
 
 // tests
-bool testInput(Input input);
+bool testInput();
 void loadMySprites();
 void loadMySounds();
 b2Body* loadMyPhysics();
@@ -13,11 +13,19 @@ void testPhysics(b2Body* body);
 void loadMyParticles();
 void testParticles();
 
+// objects
+Screen scr;
+Input in;
+Sound snd;
+Physics phy;
+
 // a container
 std::vector<std::string>bucket;
+
 // metric units to pixel scale
 const float MTOPX = 10;
 int w, h;
+
 //file locations
 const char* blobSrc = "example/images/water.png";
 const char* bgSrc = "example/images/bg.png";

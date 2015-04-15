@@ -1,7 +1,5 @@
 #include "spriteData.h"
 #include "errorHandler.h"
-#include "screen.h"
-#include <limits>
 
 // empty sprite shell
 Sprite::Sprite() :
@@ -25,8 +23,12 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
 	frameSize.h = framesize->h;
 	name = spriteName;
 	img = imgName;
-	if(frameSize.w > totalW || frameSize.h > totalH)
-		callError("Sprite constructor error: FrameSize cannot be larger than the actual image size.");
+	if(frameSize.w > totalW || frameSize.h > totalH) {
+        std::string a = "Sprite constructor error for sprite " + toStr(name) + ": FrameSize cannot be larger than the actual image size. \n";
+        std::string b = "FrameSize is " + toStr(frameSize.w) + "x" + toStr(frameSize.h) + "\n";
+        std::string c = "Image size is " + toStr(totalW) + "x" + toStr(totalH);
+		callError( a + b + c);
+	}
 	maxFramesHor = totalW / frameSize.w;
 	maxFramesVer = totalH / frameSize.h;
 	maxFrames = maxFramesHor * maxFramesVer;
@@ -45,7 +47,7 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
 	posStretch.y = 0;
 	posStretch.w = frameSize.w;
 	posStretch.h = frameSize.h;
-  
+
   frameOrder.clear();
 }
 
@@ -141,7 +143,7 @@ void Sprite::setNextFrame() {
 
 void Sprite::setFrame(int frameNum) {
 	if(frameNum >= (maxFrames) || frameNum < 0)
-		callError("Sprite method setFrame error: parameter has an invalid value.");
+		callError("Sprite method setFrame error for sprite " + toStr(name) + ": parameter has an invalid value, value is " + toStr(frameNum) + " maximum frame number is" + toStr(frameNum));
 	// if custom frame order is defined, then change gets overwritten by custom frame
 	currFrame = frameNum;
 	// if it is not animated sprite, change the frameRect now since setNextFrame will not do it.
@@ -151,10 +153,10 @@ void Sprite::setFrame(int frameNum) {
 
 void Sprite::customFrameOrder(std::vector<int>& customFrameOrder) {
 	if (customFrameOrder.size() == 0)
-		callError("Sprite method customFrameOrder error: passing an empty vector.");
+		callError("Sprite method customFrameOrder error for sprite " + toStr(name) + ": passing an empty vector");
 	for(size_t i=0; i<customFrameOrder.size(); ++i) {
 		if(customFrameOrder[i] >= maxFrames || customFrameOrder[i] < 0)
-			callError("Sprite method customFrameOrder error: a value exceeds maxFrames.");
+			callError("Sprite method customFrameOrder error for sprite " + toStr(name) + ": a value exceeds maxFrames");
 	}
 	frameOrder = customFrameOrder;
 	currCustomFrame = 0;
@@ -166,24 +168,26 @@ void Sprite::disableCustomFrameOrder() {
 	frameOrder.clear();
 }
 
-void Sprite::changeLayer(int layerNum) {
-	if(layerNum <= std::numeric_limits<int>::min() || layerNum >= std::numeric_limits<int>::max())
-		callError("Sprite method changeLayer error: invalid or out of range value");
-	onLayer = layerNum;
-	// make sortRendering a private function and make Sprite class a friend class.
-	Screen::get().sortTheRenderingLayers();
+const char* Sprite::getName() const {
+	return name;
 }
+
+const char* Sprite::setName(const char* newName) {
+    name = newName;
+    return name;
+}
+
+const char* Sprite::getImgName() const {
+	return img;
+}
+
 
 int Sprite::getLayer() const {
 	return onLayer;
 }
 
-const char* Sprite::getName() const {
-	return name;
-}
-
-const char* Sprite::getImgName() const {
-	return img;
+void Sprite::setLayer(int layerNum) {
+	onLayer = layerNum;
 }
 
 const SDL_Rect* Sprite::getPos() const {
@@ -197,7 +201,7 @@ void Sprite::setPos(int x, int y) {
 
 void Sprite::setStretch(int ws, int hs) {
 	if(ws <= 0 || hs <= 0)
-		callError("Sprite method setStretch error: invalid value given.");
+		callError("Sprite method setStretch error for sprite " + toStr(name) + ": invalid value given. Values have to be positive.");
 
 	posStretch.w = ws;
 	posStretch.h = hs;
@@ -231,7 +235,7 @@ SDL_RendererFlip Sprite::getFlip() const {
 }
 void Sprite::delayFrames(int amount) {
 	if(amount < 0 )
-		callError("Sprite method delayFrames error: invalid value given.");
+		callError("Sprite method delayFrames error for sprite " + toStr(name) + ": invalid value given. Value has to be positive");
 	frameLonger = amount;
 }
 int Sprite::getDelayedFrames() const {
