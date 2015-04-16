@@ -1,5 +1,6 @@
 #include "spriteData.h"
 #include "errorHandler.h"
+#include <cmath>
 
 // empty sprite shell
 Sprite::Sprite() :
@@ -9,13 +10,14 @@ Sprite::Sprite() :
 	frameSize.x = frameSize.y = frameSize.w = frameSize.h = 0;
 	currFrameRect.x = currFrameRect.y = currFrameRect.w = currFrameRect.h = 0;
 	posStretch.x = posStretch.y = posStretch.w = posStretch.h = 0;
+	offsetpx = 0;
 }
 
 // an actual sprite is being made
 Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int imgHeight,
-		SDL_Rect* framesize, int layer, bool isAnimated)  :
+		SDL_Rect* framesize, int layer, bool isAnimated, int spaceBetweenTiles)  :
 			totalW(imgWidth), totalH(imgHeight), onLayer(layer),
-			isAnim(isAnimated), currFrame(0), currCustomFrame(0), rotAng(0), flip(SDL_FLIP_NONE),
+			isAnim(isAnimated), offsetpx(spaceBetweenTiles), currFrame(0), currCustomFrame(0), rotAng(0), flip(SDL_FLIP_NONE),
 			frameLonger(0),	frameSuspended(0), alphaVal(255) {
 	frameSize.x = framesize->x;
 	frameSize.y = framesize->y;
@@ -29,9 +31,23 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
         std::string c = "Image size is " + toStr(totalW) + "x" + toStr(totalH);
 		callError( a + b + c);
 	}
-	maxFramesHor = totalW / frameSize.w;
-	maxFramesVer = totalH / frameSize.h;
-	maxFrames = maxFramesHor * maxFramesVer;
+	if(offsetpx > 0) {
+        float num;
+        float newTotal;
+        // width
+        num = totalW / frameSize.w;
+        newTotal =  totalW - num;
+        maxFramesHor = static_cast<int>(ceil(newTotal / frameSize.w));
+        // height
+        num = totalH / frameSize.h;
+        newTotal =  totalH - num;
+        maxFramesVer = static_cast<int>(ceil(newTotal / frameSize.h));
+	} else {
+        maxFramesHor = totalW / frameSize.w;
+        maxFramesVer = totalH / frameSize.h;
+	}
+    maxFrames = maxFramesHor * maxFramesVer;
+
 	if(maxFrames == 0) {
 		maxFramesHor = 1;
 		maxFramesVer = 1;
@@ -54,7 +70,7 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
 // Copy Constructor
 Sprite::Sprite(const Sprite& rhs) :
 	totalW(rhs.totalW), totalH(rhs.totalH), frameSize(rhs.frameSize),
-	onLayer(rhs.onLayer),isAnim(rhs.isAnim), currFrame(rhs.currFrame),
+	onLayer(rhs.onLayer),isAnim(rhs.isAnim), offsetpx (rhs.offsetpx), currFrame(rhs.currFrame),
 	currCustomFrame(rhs.currCustomFrame), currFrameRect(rhs.currFrameRect),
 	maxFramesHor(rhs.maxFramesHor), maxFramesVer(rhs.maxFramesVer),
 		maxFrames(rhs.maxFrames), posStretch(rhs.posStretch), frameOrder(rhs.frameOrder),
@@ -81,6 +97,7 @@ Sprite& Sprite::operator=(const Sprite &rhs) {
 		currFrame = rhs.currFrame;
 		posStretch = rhs.posStretch;
 		isAnim = rhs.isAnim;
+		offsetpx = rhs.offsetpx;
 		currCustomFrame = rhs.currCustomFrame;
 		rotAng = rhs.rotAng;
 		flip = rhs.flip;
@@ -181,7 +198,6 @@ const char* Sprite::getImgName() const {
 	return img;
 }
 
-
 int Sprite::getLayer() const {
 	return onLayer;
 }
@@ -257,9 +273,20 @@ void Sprite::setCurrFrameRect() {
 		currFrame = 0;
 		currFrameRect.y = 0;
 	}
-	else if(currFrame >= maxFramesHor)
-		currFrameRect.y = (currFrame/maxFramesHor) * frameSize.h;
-	else if(currFrame < maxFramesHor)
+	else if(currFrame >= maxFramesHor){
+        int calcH = (currFrame/maxFramesHor);
+        int calcHpx = calcH * frameSize.h;
+		if(offsetpx > 0 && calcHpx + (offsetpx * calcH) <= totalH)
+            currFrameRect.y = calcHpx + (offsetpx * calcH);
+		else
+            currFrameRect.y = calcHpx;
+	} else if(currFrame < maxFramesHor) {
 		currFrameRect.y = 0;
-	currFrameRect.x = ((currFrame % maxFramesHor) * frameSize.w);
+	}
+	int calcW = (currFrame % maxFramesHor);
+	int calcWpx = calcW * frameSize.w;
+	if(offsetpx > 0 && calcWpx + (offsetpx * calcW) <= totalW)
+        currFrameRect.x = calcWpx + (offsetpx * calcW);
+    else
+        currFrameRect.x = calcWpx;
 }

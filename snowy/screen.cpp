@@ -95,7 +95,7 @@ int Screen::loadImg(const char* imageName, const char* imageLocation) {
 	return 1;
 }
 
-int Screen::makeSprite(const char* spriteName, const char* imageName, int layer, SDL_Rect* framesize, bool isAnimated, bool addToRender) {
+int Screen::makeSprite(const char* spriteName, const char* imageName, int layer, SDL_Rect* framesize, int tileMarginOffSet, bool isAnimated, bool addToRender) {
 	if(allSprTex.count(imageName) == 0)
 		callError("screen method makeSprite error: trying to load non-existing image, " + toStr(imageName));
 	if(allSprObj.count(spriteName) > 0)
@@ -108,9 +108,9 @@ int Screen::makeSprite(const char* spriteName, const char* imageName, int layer,
 		tmp.x = tmp.y = 0;
 		tmp.w = wid;
 		tmp.h = hei;
-		allSprObj[spriteName] = Sprite(spriteName, imageName, wid, hei, &tmp, layer, isAnimated);
+		allSprObj[spriteName] = Sprite(spriteName, imageName, wid, hei, &tmp, layer, isAnimated, tileMarginOffSet);
 	} else
-		allSprObj[spriteName] = Sprite(spriteName, imageName, wid, hei, framesize, layer, isAnimated);
+		allSprObj[spriteName] = Sprite(spriteName, imageName, wid, hei, framesize, layer, isAnimated, tileMarginOffSet);
 	if(addToRender) {
         spritesToRender.push_back(&allSprObj[spriteName]);
         std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
@@ -245,7 +245,7 @@ int Screen::text(const char* name, std::string message, TTF_Font* fnt, SDL_Color
     SDL_FreeSurface(txt);
 	if(allSprTex[name] == nullptr)
 		callError("screen method text error for \"" + toStr(name) + "\": " + std::string(TTF_GetError()));
-    if(!makeSprite(name, name, layer, nullptr, false, renderImmediately))
+    if(!makeSprite(name, name, layer, nullptr, 0, false, renderImmediately))
         callError("screen method text error for \"" + toStr(name) + "\": makeSprite failure, sprite name \"" + toStr(name) + "\" already exists.");
     allSprObj[name].setPos(x,y);
     return 1;

@@ -13,6 +13,9 @@ http://opengameart.org/content/out-of-place-nes-version
 Sound effect stream5.ogg by kurt (CC-BY 3.0)
 http://opengameart.org/content/stream-sounds
 
+kenpixel_mini_square.ttf and tileSetKennyNL.png made by KennyNL (CC0)
+http://kenney.nl/assets
+
 Water balls and Box face made by me (CC0).
 
 CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/

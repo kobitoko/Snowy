@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include "../snowy/snowy.h"
+#include "../snowy/timer.h"
 
 // tests
 bool testInput();
@@ -13,11 +14,14 @@ void testPhysics(b2Body* body);
 void loadMyParticles();
 void testParticles();
 
+float getFps();
+
 // objects
 Screen scr;
 Input in;
 Sound snd;
 Physics phy;
+Timer timer;
 
 // a container
 std::vector<std::string>bucket;
@@ -33,3 +37,5 @@ const char* boxSrc = "example/images/box.png";
 const char* meteorSrc = "example/images/meteor.png";
 const char* bgm = "example/sounds/Out of place NES.wav";
 const char* sfx = "example/sounds/stream5.ogg";
+const char* fontLoc = "example/kenpixel_mini_square.ttf";
+const char* tileLoc = "example/images/tileSetKennyNL.png";

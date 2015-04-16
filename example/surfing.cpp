@@ -25,6 +25,7 @@ int main(int argc, char * argv[]) {
     in = Input();
     snd = Sound();
     phy = Physics();
+    timer = Timer();
 
 	scr.makeWindow(x,y,w,h,"Surf!");
 	//SDL_SetWindowBordered(window.getWindow(),SDL_FALSE);
@@ -45,13 +46,14 @@ int main(int argc, char * argv[]) {
 	while(running) {
 
 		if(SDL_TICKS_PASSED(SDL_GetTicks(), gameTime)) {
-			//std::cout << "FPS:" << scr.getFps() << "\r";
+            float fpsVal = getFps();
+            std::cout << "FPS:" << fpsVal << "   \r";
 			//MinGW has an issue with std::to_string -> http://stackoverflow.com/questions/22571838/gcc-4-8-1-stdto-string-error
-			//winName = "Surf! - FPS:" + std::to_string(scr.getFps());
-			//std::ostringstream winNameFps;
-			//winNameFps << "FPS:" << scr.getFps();
-			//std::string winName = "Surf!" + winNameFps.str();
-			//SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
+			//winName = "Surf! - FPS:" + std::to_string(getFps());
+			std::ostringstream winNameFps;
+			winNameFps << "FPS:" << fpsVal;
+			std::string winName = "Surf! - " + winNameFps.str();
+			SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
 
 			//Later just perhaps make events seperately on which Input class works on????
 			// or custom events class to handle user events.
@@ -70,6 +72,7 @@ int main(int argc, char * argv[]) {
 
             // update screen.
             scr.update();
+            //std::cout<< 1000.0f / timer.stop()<<"      \r";
 
 			gameTime = SDL_GetTicks() + msPerFrame;
 		}
@@ -77,6 +80,12 @@ int main(int argc, char * argv[]) {
 
 	SDL_Quit();
 	return 0;
+}
+
+float getFps() {
+    float give = 1000.0f/timer.stop();
+    timer.start();
+    return give;
 }
 
 // Tests' Function definitions --------------------------------------------------
@@ -105,9 +114,29 @@ void loadMySprites() {
 	scr.spriteData("bg")->setStretch(800, 600);
     scr.addSpriteToRender("bg");
 
+    // test tileset
+    scr.loadImg("tileSetImg", tileLoc);
+	SDL_Rect tileSize;
+	tileSize.x = tileSize.y = 0;
+	tileSize.w = 16;
+	tileSize.h = 16;
+    scr.makeSprite("tileSet", "tileSetImg", 5, &tileSize, 1, false, true);
+    scr.spriteData("tileSet")->setFrame(56);
+
+    scr.duplicateSprite("tileSet2", "tileSet", true);
+    scr.spriteData("tileSet2")->setFrame(113);
+	scr.spriteData("tileSet2")->setPos(0,16);
+
+    // animated tileset
+	scr.makeSprite("tileSetAni","tileSetImg", 0, &tileSize, 1, true, true);
+	scr.spriteData("tileSetAni")->setPos(16,16);
+	std::vector<int>framez({470,471});
+	scr.spriteData("tileSetAni")->customFrameOrder(framez);
+    scr.spriteData("tileSetAni")->delayFrames(30);
+
     // test font
-    TTF_Font* font = TTF_OpenFontIndex("example/kenpixel_mini_square.ttf", 18, 0);
-    TTF_Font* font2 = TTF_OpenFontIndex("example/kenpixel_mini_square.ttf", 11, 0);
+    TTF_Font* font = TTF_OpenFontIndex(fontLoc, 18, 0);
+    TTF_Font* font2 = TTF_OpenFontIndex(fontLoc, 11, 0);
     SDL_Color colr;
     colr.a = 255;
     colr.r = 0;
@@ -144,7 +173,7 @@ void loadMySprites() {
 	scr.duplicateSprite("meteorThe2nd", "meteor", true);
 	scr.spriteData("meteorThe2nd")->setStretch(80, 150);
 	scr.spriteData("meteorThe2nd")->setAlpha(100);
-	scr.spriteData("meteorThe2nd")->setPos(20,100);
+	scr.spriteData("meteorThe2nd")->setPos(100,50);
 	scr.changeLayer("meteorThe2nd", 3);
 
     // print all the images and sprites.

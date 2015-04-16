@@ -33,7 +33,7 @@ public:
 
 	// makes a sprite from an existing image in memory. Returns 0 if a sprite with the same name already exists.
 	// addToRender true means it will be added directly into the to to-be-rendered vector. Default is false.
-	int makeSprite(const char* spriteName, const char* imageName, int layer = 0, SDL_Rect* framesize = nullptr, bool isAnimated = true, bool addToRender = false);
+	int makeSprite(const char* spriteName, const char* imageName, int layer = 0, SDL_Rect* framesize = nullptr, int tileMarginOffSet = 0, bool isAnimated = true, bool addToRender = false);
 
     // add a sprite to the to-be-rendered vector and returns 1. Returns 0 if sprite already exists in that vector.
     // Calls Error if sprite doesn't exist.

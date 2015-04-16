@@ -1,0 +1,14 @@
+#include <ctime>
+#include <SDL2/SDL.h>
+#include <iostream>
+class Timer {
+public:
+    Timer();
+    ~Timer();
+    void start();
+    size_t stop();
+    float getSeconds();
+
+private:
+    clock_t ticker;
+};

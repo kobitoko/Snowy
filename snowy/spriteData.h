@@ -9,7 +9,7 @@ class Sprite {
 public:
 	Sprite();
 
-	Sprite(const char* spriteName, const char* imgName, int imgWidth, int imgHeight, SDL_Rect* framesize, int layer = 0, bool isAnimated = true);
+	Sprite(const char* spriteName, const char* imgName, int imgWidth, int imgHeight, SDL_Rect* framesize, int layer = 0, bool isAnimated = true, int spaceBetweenTiles = 0);
 	Sprite(const Sprite& rhs);
 	Sprite& operator=(const Sprite &rhs);
 	~Sprite() { }
@@ -121,15 +121,19 @@ private:
 	int maxFramesHor;
 	int maxFramesVer;
 	int maxFrames;
+	int offsetpx;
+
 	int currFrame;
+	int currCustomFrame;
 	SDL_Rect posStretch;
 	std::vector<int> frameOrder;
-	int currCustomFrame;
+
 	double rotAng;
 	SDL_RendererFlip flip;
 	int frameLonger;
 	int frameSuspended;
 	Uint8 alphaVal;
+
 	// private function
 	void setCurrFrameRect();
 
