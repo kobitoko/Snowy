@@ -158,6 +158,14 @@ std::vector<std::string> Screen::getRenderSpriteNames() const{
     return ret;
 }
 
+bool Screen::spriteExist(const char* name) const{
+	return allSprObj.count(name) > 0;
+}
+
+bool Screen::textureExist(const char* name) const{
+	return allSprTex.count(name) > 0;
+}
+
 void Screen::changeLayer(const char* spriteName, int newLayerNumber) {
 	spriteData(spriteName)->setLayer(newLayerNumber);
 	sortTheRenderingLayers();

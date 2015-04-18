@@ -1,5 +1,5 @@
+#pragma once
 #include <ctime>
-#include <SDL2/SDL.h>
 #include <iostream>
 class Timer {
 public:

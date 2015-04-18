@@ -2,9 +2,6 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
-//forward declare
-class Screen;
-
 class Sprite {
 public:
 	Sprite();

@@ -5,7 +5,7 @@ class Physics {
 public:
     // create a Physics object
     Physics();
-    Physics(float gravityY, float gravityX = 0.0f, float timeStep = 1.0f/60.0f, int32 velIteration = 5, int32 posIteration = 3, float particleRadius = 1.0f);
+    Physics(float gravityY, float gravityX = 0.0f, float metricToPx = 10.0f, float timeStep = 1.0f/60.0f, int32 velIteration = 5, int32 posIteration = 3, float particleRadius = 1.0f);
 
 	// Creates only once a physics world with given gravity. Does nothing upon multiple calls.
 	void createWorld(b2Vec2 gravityGiven);
@@ -13,9 +13,6 @@ public:
 	// Creates only once a particle system within the world. Does nothing upon multiple calls.
 	// createWorld(float) has to be called first, else this function will do nothing.
 	void createParticles();
-
-	// gets access to the update step variable TimeStep. Default value is (1.0f / 60.0f) i.e. 60Hz;
-	float32& getTimeStep();
 
 	// gets access to the update step variable VelocityIterations. Default value is 5.
 	int32& getVelocityIterations();
@@ -31,6 +28,10 @@ public:
 	// Does nothing if createWorld(b2Vec2) was not called before.
 	// Also updates the particles if createParticles() was called before.
 	void update();
+
+    // extrapolation smoothing.
+    void smoothStates(float accumulatorRatio, const float fixedTimeStep);
+    void resetSmoothStates();
 
 	// returns the world so you can modify it.
 	b2World* getWorld();
@@ -48,6 +49,8 @@ private:
 	int32 velocityIterations;
 	int32 positionsIterations;
 	int32 particleIterations;
+	// metric units to pixel scale
+    float mToPx;
 
 };
 

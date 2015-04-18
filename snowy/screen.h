@@ -12,6 +12,8 @@ public:
     // creates a screen object.
     Screen();
 
+    Screen& operator=(const Screen &rhs){}
+
 	~Screen();
 
 	// creates a window.
@@ -50,6 +52,12 @@ public:
 
     // returns a vector containing names of all sprites in the to-be-rendered vector.
     std::vector<std::string> getRenderSpriteNames() const;
+
+    // returns whether the given sprite name exists or not
+    bool spriteExist(const char* name) const;
+
+    // returns whether the given texture name exists or not
+    bool textureExist(const char* name) const;
 
     // change sprite's layer to a specified layer number.
     void changeLayer(const char* spriteName, int newLayerNumber);
@@ -92,6 +100,10 @@ public:
     int text(const char* name, std::string message, TTF_Font* fnt, SDL_Color color, int x=0, int y=0, int layer = 1, int mode=0, bool renderImmediately=false);
 
 private:
+
+	// don't allow copy construct.
+	Screen(const Screen& rhs){}
+
 	SDL_Window *win;
 	SDL_Rect cameraView, rectDummy;
 	SDL_Renderer *screenRend;

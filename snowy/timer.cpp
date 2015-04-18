@@ -1,12 +1,10 @@
 #include "timer.h"
 
-//SDL_TICKS_PASSED(SDL_GetTicks(), gameTime)
 Timer::Timer() {
     ticker = 0;
 }
 
 Timer::~Timer() {
-    //delete[] timeContainer;
 }
 
 void Timer::start() {

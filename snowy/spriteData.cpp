@@ -41,6 +41,7 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
         // height
         num = totalH / frameSize.h;
         newTotal =  totalH - num;
+
         maxFramesVer = static_cast<int>(ceil(newTotal / frameSize.h));
 	} else {
         maxFramesHor = totalW / frameSize.w;

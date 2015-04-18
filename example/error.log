@@ -1,0 +1,6 @@
+Thu Apr 16 00:38:19 2015
+Hello World!
+
+Thu Apr 16 00:38:19 2015
+screen method loadImg SDL_CreateTextureFromSurface for image bgImg error: SDL_CreateTextureFromSurface() passed NULL surface
+

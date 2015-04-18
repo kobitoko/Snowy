@@ -1,19 +1,16 @@
 #include "surfing.h"
 #include <string>
 #include <sstream>
+#include <cmath>
 
 // SDL2 needs main() to be main(int argc, char * argv[]) and not the simple main()
 // https://wiki.libsdl.org/FAQWindows#I_get_.22Undefined_reference_to_.27SDL_main.27.22_...
 int main(int argc, char * argv[]) {
-
-	std::cout << "Hi there!" << std::endl;
-
-	// writes an error log, if 2nd parameter is false it will not crash the game.
-	callError("Hello World!", false);
-
-	Uint32 gameTime = SDL_GetTicks();
-	// the core game updates will be capped at 60fps
-	Uint32 msPerFrame = 1000/60;
+	// to prevent spiral of death, set max number of steps.
+	const int MAX_STEPS = 6;
+	// initialize accumulator and it's ratio.
+	accumulator = 0.0f;
+	accumulatorRatio = 0.0f;
 
 	// Init
 	int x = SDL_WINDOWPOS_CENTERED;
@@ -24,8 +21,9 @@ int main(int argc, char * argv[]) {
     scr = Screen();
     in = Input();
     snd = Sound();
-    phy = Physics();
+    phy = Physics(9.8066f, 0.0f, 10.0f, FIXED_TIMESTEP);
     timer = Timer();
+    objMan = ObjectManager();
 
 	scr.makeWindow(x,y,w,h,"Surf!");
 	//SDL_SetWindowBordered(window.getWindow(),SDL_FALSE);
@@ -38,48 +36,60 @@ int main(int argc, char * argv[]) {
 	loadMySounds();
 
 	// load the physics
-	b2Body* theBody = loadMyPhysics();
+	theBody = loadMyPhysics();
 	loadMyParticles();
-	bool running = true;
+	running = true;
 
-	// main loop http://gameprogrammingpatterns.com/game-loop.html
+	// fixed time step from http://www.unagames.com/blog/daniele/2010/06/fixed-time-step-implementation-box2d
 	while(running) {
 
-		if(SDL_TICKS_PASSED(SDL_GetTicks(), gameTime)) {
-            float fpsVal = getFps();
-            std::cout << "FPS:" << fpsVal << "   \r";
-			//MinGW has an issue with std::to_string -> http://stackoverflow.com/questions/22571838/gcc-4-8-1-stdto-string-error
-			//winName = "Surf! - FPS:" + std::to_string(getFps());
-			std::ostringstream winNameFps;
-			winNameFps << "FPS:" << fpsVal;
-			std::string winName = "Surf! - " + winNameFps.str();
-			SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
+        accumulator += FIXED_TIMESTEP;
+        const int nSteps = static_cast<int>(std::floor(accumulator / FIXED_TIMESTEP));
 
-			//Later just perhaps make events seperately on which Input class works on????
-			// or custom events class to handle user events.
-			in.updateInput();
+        //avoiding rounding error, touches accumulator only if needed.
+        if(nSteps > 0)
+            accumulator -= nSteps * FIXED_TIMESTEP;
 
-			// update physics, 2 times to prevent slowmotion water but requires more computation.
-			phy.update();
-			phy.update();
+        accumulatorRatio = accumulator / FIXED_TIMESTEP;
 
-			// physics and particle testing
-			testPhysics(theBody);
-			testParticles();
+        // similar to clamp "dt" but keeps above calculations of accumulator and accumulatorRatio unchaged.
+        const int nStepsClamped = std::min(nSteps, MAX_STEPS);
+        for(int i = 0; i < nStepsClamped; ++i) {
+            phy.resetSmoothStates();
+            updateLogic();
+        }
+        phy.getWorld()->ClearForces();
+        phy.smoothStates(accumulatorRatio, FIXED_TIMESTEP);
 
-			// Test input
-			running = testInput();
+        // update screen.
+        scr.update();
 
-            // update screen.
-            scr.update();
-            //std::cout<< 1000.0f / timer.stop()<<"      \r";
-
-			gameTime = SDL_GetTicks() + msPerFrame;
-		}
 	}
 
 	SDL_Quit();
 	return 0;
+}
+
+void updateLogic() {
+
+    float fpsVal = getFps();
+    //std::cout << "FPS:" << fpsVal << "   \r";
+    std::ostringstream winNameFps;
+    winNameFps << "FPS:" << fpsVal;
+    std::string winName = "Surf! - " + winNameFps.str();
+    SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
+
+    in.updateInput();
+
+    // Test input
+    running = testInput();
+
+    // update physics.
+    phy.update();
+
+    // physics and particle testing
+    testPhysics(theBody);
+    testParticles();
 }
 
 float getFps() {
@@ -195,7 +205,6 @@ void loadMySprites() {
 
 b2Body* loadMyPhysics() {
 	// from http://google.github.io/liquidfun/Programmers-Guide/html/md__chapter02__hello__box2_d.html
-	phy.createWorld(b2Vec2(0.0f, 9.80665f));
 	// GROUND BOX
 	b2BodyDef groundBodyDef;
 	groundBodyDef.position.Set(40.0f, -0.5f);
@@ -234,8 +243,8 @@ b2Body* loadMyPhysics() {
 	fixtureDef.restitution = 0.3f;
 	fixtureDef.friction = 1.0f;
 	body->CreateFixture(&fixtureDef);
-
-	//phy.getTimeStep() = 1.0f / 30.0f;
+    objMan.createObject("boxObj",0, 0, 0.0f, scr.spriteData("box"));
+	body->SetUserData(objMan.objData("boxObj"));
 	phy.getVelocityIterations() = 3;
 	phy.getPositionsIterations() = 5;
 
@@ -243,16 +252,6 @@ b2Body* loadMyPhysics() {
 }
 
 void testPhysics(b2Body* body) {
-	// it is in meters
-	b2Vec2 position = body->GetPosition();
-	b2Vec2 center = b2Vec2(2.5f, 2.5f);
-
-	// it is in radians
-	float32 angle = body->GetAngle();
-
-	// converting into screen coordinates 10m = 100px.
-	scr.spriteData("box")->rotation(angle*(180/3.141592));
-	scr.spriteData("box")->setPos(MTOPX*(position.x - center.x), MTOPX*(position.y - center.y));
 	// up force
 	if(in.keyStatus(SDLK_UP))
 		body->ApplyLinearImpulse(b2Vec2(0.0f,-10.0f), body->GetPosition(), true);

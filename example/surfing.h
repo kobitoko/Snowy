@@ -3,7 +3,9 @@
 #include <iostream>
 #include <vector>
 #include "../snowy/snowy.h"
-#include "../snowy/timer.h"
+
+void updateLogic();
+float getFps();
 
 // tests
 bool testInput();
@@ -14,7 +16,6 @@ void testPhysics(b2Body* body);
 void loadMyParticles();
 void testParticles();
 
-float getFps();
 
 // objects
 Screen scr;
@@ -22,13 +23,22 @@ Input in;
 Sound snd;
 Physics phy;
 Timer timer;
+ObjectManager objMan;
 
 // a container
 std::vector<std::string>bucket;
 
 // metric units to pixel scale
 const float MTOPX = 10;
+
 int w, h;
+bool running;
+// core game logic updates will be capped at 60fps. This is the dt.
+const float FIXED_TIMESTEP = 1.0f / 60.0f;
+float accumulator, accumulatorRatio;
+
+//test
+b2Body* theBody;
 
 //file locations
 const char* blobSrc = "example/images/water.png";
