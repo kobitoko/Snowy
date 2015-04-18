@@ -16,13 +16,12 @@ void testPhysics(b2Body* body);
 void loadMyParticles();
 void testParticles();
 
-
 // objects
 Screen scr;
 Input in;
 Sound snd;
 Physics phy;
-Timer timer;
+Timer fpsTimer;
 ObjectManager objMan;
 
 // a container
@@ -30,11 +29,14 @@ std::vector<std::string>bucket;
 
 // metric units to pixel scale
 const float MTOPX = 10;
-
+//9.8066 is earth's gravity.
+const float GRAVITY = 40.0f;;
 int w, h;
 bool running;
-// core game logic updates will be capped at 60fps. This is the dt.
+// core game logic updates will 60Hz
 const float FIXED_TIMESTEP = 1.0f / 60.0f;
+// fps capped at 60fps
+const float CAPPED_FRAMERATE = 1.0f / 60.0f;
 float accumulator, accumulatorRatio;
 
 //test

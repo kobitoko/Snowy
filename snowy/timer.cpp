@@ -12,13 +12,10 @@ void Timer::start() {
 }
 
 size_t Timer::stop() {
-    ticker = clock() - ticker;
-    return ticker;
+    lastTime = clock() - ticker;
+    return lastTime;
 }
 
-float Timer::getSeconds() {
-    return ticker/static_cast<float>(CLOCKS_PER_SEC);
-}
 
 
 

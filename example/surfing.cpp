@@ -7,7 +7,7 @@
 // https://wiki.libsdl.org/FAQWindows#I_get_.22Undefined_reference_to_.27SDL_main.27.22_...
 int main(int argc, char * argv[]) {
 	// to prevent spiral of death, set max number of steps.
-	const int MAX_STEPS = 6;
+	const int MAX_STEPS = 8;
 	// initialize accumulator and it's ratio.
 	accumulator = 0.0f;
 	accumulatorRatio = 0.0f;
@@ -21,8 +21,10 @@ int main(int argc, char * argv[]) {
     scr = Screen();
     in = Input();
     snd = Sound();
-    phy = Physics(9.8066f, 0.0f, 10.0f, FIXED_TIMESTEP);
-    timer = Timer();
+    phy = Physics(GRAVITY, 0.0f, 10.0f, FIXED_TIMESTEP);
+    fpsTimer = Timer();
+    Timer timer = Timer();
+    float renderTime = 0.0f;
     objMan = ObjectManager();
 
 	scr.makeWindow(x,y,w,h,"Surf!");
@@ -42,8 +44,11 @@ int main(int argc, char * argv[]) {
 
 	// fixed time step from http://www.unagames.com/blog/daniele/2010/06/fixed-time-step-implementation-box2d
 	while(running) {
+        timer.stop();
 
-        accumulator += FIXED_TIMESTEP;
+        renderTime += timer.getSeconds();
+        accumulator += timer.getSeconds();
+        timer.start();
         const int nSteps = static_cast<int>(std::floor(accumulator / FIXED_TIMESTEP));
 
         //avoiding rounding error, touches accumulator only if needed.
@@ -61,8 +66,19 @@ int main(int argc, char * argv[]) {
         phy.getWorld()->ClearForces();
         phy.smoothStates(accumulatorRatio, FIXED_TIMESTEP);
 
-        // update screen.
-        scr.update();
+        if(renderTime >= CAPPED_FRAMERATE) {
+            renderTime = 0;
+            // update screen.
+            scr.update();
+
+            float fpsVal = getFps();
+
+            std::cout << "FPS:" << fpsVal << " Frame took " << timer.getSeconds() << " seconds.       \r";
+            std::ostringstream winNameFps;
+            winNameFps << "FPS:" << fpsVal;
+            std::string winName = "Surf! - " + winNameFps.str();
+            SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
+        }
 
 	}
 
@@ -72,12 +88,6 @@ int main(int argc, char * argv[]) {
 
 void updateLogic() {
 
-    float fpsVal = getFps();
-    //std::cout << "FPS:" << fpsVal << "   \r";
-    std::ostringstream winNameFps;
-    winNameFps << "FPS:" << fpsVal;
-    std::string winName = "Surf! - " + winNameFps.str();
-    SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
 
     in.updateInput();
 
@@ -93,8 +103,8 @@ void updateLogic() {
 }
 
 float getFps() {
-    float give = 1000.0f/timer.stop();
-    timer.start();
+    float give = 1000.0f / fpsTimer.stop();
+    fpsTimer.start();
     return give;
 }
 
@@ -239,14 +249,17 @@ b2Body* loadMyPhysics() {
 	dynamicBox.SetAsBox(2.5f, 2.5f);
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &dynamicBox;
-	fixtureDef.density = 0.7f;
+	fixtureDef.density = 0.8f;
 	fixtureDef.restitution = 0.3f;
 	fixtureDef.friction = 1.0f;
 	body->CreateFixture(&fixtureDef);
-    objMan.createObject("boxObj",0, 0, 0.0f, scr.spriteData("box"));
+
+  objMan.createObject("boxObj",0, 0, 0.0f, scr.spriteData("box"));
 	body->SetUserData(objMan.objData("boxObj"));
+
 	phy.getVelocityIterations() = 3;
 	phy.getPositionsIterations() = 5;
+
 
 	return body;
 }
@@ -254,17 +267,16 @@ b2Body* loadMyPhysics() {
 void testPhysics(b2Body* body) {
 	// up force
 	if(in.keyStatus(SDLK_UP))
-		body->ApplyLinearImpulse(b2Vec2(0.0f,-10.0f), body->GetPosition(), true);
+		body->ApplyLinearImpulse(b2Vec2(0.0f,-20.0f), body->GetPosition(), true);
 	// down force
 		if(in.keyStatus(SDLK_DOWN))
-			body->ApplyLinearImpulse(b2Vec2(0.0f,10.0f), body->GetPosition(), true);
+			body->ApplyLinearImpulse(b2Vec2(0.0f,20.0f), body->GetPosition(), true);
 	// right force
 	if(in.keyStatus(SDLK_LEFT))
-			body->ApplyLinearImpulse(b2Vec2(-10.0f,0.0f), body->GetPosition(), true);
+			body->ApplyLinearImpulse(b2Vec2(-20.0f,0.0f), body->GetPosition(), true);
 	// left force
 	if(in.keyStatus(SDLK_RIGHT))
-			body->ApplyLinearImpulse(b2Vec2(10.0f,0.0f), body->GetPosition(), true);
-
+			body->ApplyLinearImpulse(b2Vec2(20.0f,0.0f), body->GetPosition(), true);
 }
 
 
@@ -281,11 +293,11 @@ void loadMySounds() {
 
 void loadMyParticles() {
 	phy.createParticles();
-	phy.getParticles()->SetGravityScale(static_cast<float32>(2.0f));
+	phy.getParticles()->SetGravityScale(static_cast<float32>(3.0f));
 	phy.getParticles()->SetRadius(0.6f);
 	phy.getParticles()->SetDensity(1.0f);
 	// radius 1 default, the smaller radius, the more particles needed to fill something -> performance hit.
-	phy.getParticleIterations() = b2CalculateParticleIterations(9.80556f, 0.6f, 1.0f/60.0f);
+	phy.getParticleIterations() = b2CalculateParticleIterations(GRAVITY, 0.6f, FIXED_TIMESTEP);
 }
 
 void testParticles() {
@@ -308,9 +320,6 @@ void testParticles() {
 			scr.spriteData(bucket[j].c_str())->setPos(static_cast<int>(xLoc), static_cast<int>(yLoc));
 		}
 	}
-	// get mouse coordinates and make text follow mouse
-	std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
-	scr.spriteData("mouseTxt")->setPos(coords.first, coords.second);
 
 	// make water
 	if(in.mouseKeyStatus(SDL_BUTTON_LEFT)) {
@@ -318,6 +327,7 @@ void testParticles() {
 		if(!Mix_Playing(1))
 			Mix_PlayChannel(1, snd.getSFX("waterSnd"), 0);
 		// create them at the mouse cursor
+		std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
 		b2ParticleDef pd;
 		pd.lifetime = 120;
 		pd.flags = b2_springParticle;
