@@ -321,13 +321,15 @@ void testParticles() {
 		}
 	}
 
+    std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
+    scr.spriteData("mouseTxt")->setPos(coords.first, coords.second);
+
 	// make water
 	if(in.mouseKeyStatus(SDL_BUTTON_LEFT)) {
 		// play water sound if it is not already playing
 		if(!Mix_Playing(1))
 			Mix_PlayChannel(1, snd.getSFX("waterSnd"), 0);
 		// create them at the mouse cursor
-		std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
 		b2ParticleDef pd;
 		pd.lifetime = 120;
 		pd.flags = b2_springParticle;

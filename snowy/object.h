@@ -46,11 +46,11 @@ public:
     const char* getName() const;
 
 private:
+    const char* name;
     int x;
     int y;
     float rot;
     Sprite* spr;
     int sprH;
     int sprW;
-    const char* name;
 };

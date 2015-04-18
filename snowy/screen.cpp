@@ -242,7 +242,7 @@ int Screen::text(const char* name, std::string message, TTF_Font* fnt, SDL_Color
         callError("screen method text error for \"" + toStr(name) + "\": TTF_Font is nullptr.");
     if(allSprTex.count(name) > 0)
 		return 0;
-    SDL_Surface* txt;
+    SDL_Surface* txt = nullptr;
     if(mode == 0)
         txt = TTF_RenderUTF8_Solid(fnt, message.c_str(), color);
     else if(mode == 1)
