@@ -14,7 +14,9 @@ void loadMySounds();
 b2Body* loadMyPhysics();
 void testPhysics(b2Body* body);
 void loadMyParticles();
+void loadMyJelly();
 void testParticles();
+
 
 // objects
 Screen scr;

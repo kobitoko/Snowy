@@ -40,6 +40,8 @@ int main(int argc, char * argv[]) {
 	// load the physics
 	theBody = loadMyPhysics();
 	loadMyParticles();
+	loadMyJelly();
+
 	running = true;
 
 	// fixed time step from http://www.unagames.com/blog/daniele/2010/06/fixed-time-step-implementation-box2d
@@ -79,16 +81,12 @@ int main(int argc, char * argv[]) {
             std::string winName = "Surf! - " + winNameFps.str();
             SDL_SetWindowTitle(scr.getWindow(), winName.c_str());
         }
-
 	}
-
 	SDL_Quit();
 	return 0;
 }
 
 void updateLogic() {
-
-
     in.updateInput();
 
     // Test input
@@ -254,13 +252,11 @@ b2Body* loadMyPhysics() {
 	fixtureDef.friction = 1.0f;
 	body->CreateFixture(&fixtureDef);
 
-  objMan.createObject("boxObj",0, 0, 0.0f, scr.spriteData("box"));
+    objMan.createObject("boxObj",0, 0, 0.0f, scr.spriteData("box"));
 	body->SetUserData(objMan.objData("boxObj"));
 
 	phy.getVelocityIterations() = 3;
 	phy.getPositionsIterations() = 5;
-
-
 	return body;
 }
 
@@ -269,16 +265,15 @@ void testPhysics(b2Body* body) {
 	if(in.keyStatus(SDLK_UP))
 		body->ApplyLinearImpulse(b2Vec2(0.0f,-20.0f), body->GetPosition(), true);
 	// down force
-		if(in.keyStatus(SDLK_DOWN))
-			body->ApplyLinearImpulse(b2Vec2(0.0f,20.0f), body->GetPosition(), true);
+    if(in.keyStatus(SDLK_DOWN))
+        body->ApplyLinearImpulse(b2Vec2(0.0f,20.0f), body->GetPosition(), true);
 	// right force
 	if(in.keyStatus(SDLK_LEFT))
-			body->ApplyLinearImpulse(b2Vec2(-20.0f,0.0f), body->GetPosition(), true);
+        body->ApplyLinearImpulse(b2Vec2(-20.0f,0.0f), body->GetPosition(), true);
 	// left force
 	if(in.keyStatus(SDLK_RIGHT))
-			body->ApplyLinearImpulse(b2Vec2(20.0f,0.0f), body->GetPosition(), true);
+        body->ApplyLinearImpulse(b2Vec2(20.0f,0.0f), body->GetPosition(), true);
 }
-
 
 void loadMySounds() {
 	// Recommend to use OGG. Mp3 had some weird things like some dont work & froze since probably different mp3 encodings.
@@ -300,30 +295,50 @@ void loadMyParticles() {
 	phy.getParticleIterations() = b2CalculateParticleIterations(GRAVITY, 0.6f, FIXED_TIMESTEP);
 }
 
+void loadMyJelly() {
+	//create particle group
+	b2ParticleGroupDef pd;
+	b2PolygonShape shape;
+	shape.SetAsBox(10,5);
+	pd.shape = &shape;
+
+	// for jelly-ness
+	pd.flags = b2_elasticParticle;//b2_elasticParticle;//b2_springParticle;//b2_viscousParticle;
+
+	pd.strength = 0.95;
+	pd.position.Set(40,50);
+	phy.getParticles()->CreateParticleGroup(pd);
+}
+
 void testParticles() {
-	// BUG: This doesnt remove sprites propperly. Sometimes no sprites come due to some already existing so we get invisible water.
-	for(size_t j=0; j< bucket.size(); ++j) {
+    std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
+    scr.spriteData("mouseTxt")->setPos(coords.first, coords.second);
+    int32 bucketSize = static_cast<int32>(bucket.size());
+    int32 particleCounts = phy.getParticles()->GetParticleCount();
+    if(bucketSize != particleCounts) {
+        if(bucketSize < phy.getParticles()->GetParticleCount()) {
+            int32 toAdd = particleCounts - bucketSize;
+            for(int32 i = 0; i < toAdd; ++i) {
+                std::ostringstream stream;
+                stream << "drop" << bucket.size()+1;
+                std::string name = stream.str();
+                scr.duplicateSprite(name.c_str(),"drop", true);
+                bucket.push_back(name);
+                scr.addSpriteToRender(name.c_str());
+            }
+		}else if(bucketSize > particleCounts) {
+			scr.removeSprite(scr.spriteData(bucket.back().c_str())->getName());
+			bucket.pop_back();
+		}
+    }
+	for(int32 j=0; j< particleCounts; ++j) {
 		float radius = phy.getParticles()->GetRadius();
 		double xLoc = round(MTOPX * (phy.getParticles()->GetPositionBuffer()[j].x - radius));
 		double yLoc = round(MTOPX * (phy.getParticles()->GetPositionBuffer()[j].y - radius));
-
-        // GetExpirationTimeBuff just gets expiration time, doesn't tell you if it's about to be destroyed or not, use the callback b2DestructionListener::SayGoodbye
-		if(phy.getParticles()->GetExpirationTimeBuffer()[j] <= 1
-				&& scr.spriteData(bucket[j].c_str()) != nullptr) {
-			scr.removeSprite(scr.spriteData(bucket[j].c_str())->getName());
-			bucket[j] = bucket.back();
-			bucket.back() = "";
-			bucket.pop_back();
-			--j;
-		}
 		if(scr.spriteData(bucket[j].c_str()) != nullptr) {
 			scr.spriteData(bucket[j].c_str())->setPos(static_cast<int>(xLoc), static_cast<int>(yLoc));
 		}
 	}
-
-    std::pair<Sint32, Sint32> coords = in.getMouseValues(MouseVals::COORDS);
-    scr.spriteData("mouseTxt")->setPos(coords.first, coords.second);
-
 	// make water
 	if(in.mouseKeyStatus(SDL_BUTTON_LEFT)) {
 		// play water sound if it is not already playing
@@ -331,27 +346,11 @@ void testParticles() {
 			Mix_PlayChannel(1, snd.getSFX("waterSnd"), 0);
 		// create them at the mouse cursor
 		b2ParticleDef pd;
-		pd.lifetime = 120;
+		pd.lifetime = 80;
 		pd.flags = b2_springParticle;
 		pd.velocity = b2Vec2(0.0f, 5.0f);
 		pd.position.Set(coords.first / MTOPX, coords.second / MTOPX);
-
 		phy.getParticles()->CreateParticle(pd);
-
-		//std::string name = "drop" + std::to_string(bucket.size()+1);
-		std::ostringstream stream;
-		stream << "drop" << bucket.size()+1;
-		std::string name = stream.str();
-		scr.duplicateSprite(name.c_str(),"drop", true);
-		scr.spriteData(name.c_str())->setPos(coords.first, coords.second);
-		bucket.push_back(name);
-
-		//print the names of all the water
-        /*std::vector<std::string> c = scr.getRenderSpriteNames();
-        std::cout << "-----------RenderedSprites-----------" << std::endl;
-        for(auto& cc : c)
-            std::cout << cc << std::endl;
-        */
 	}else if(!in.mouseKeyStatus(SDL_BUTTON_LEFT)) {
 		// stop water sound if not holding left mouse button.
 		Mix_HaltChannel(1);
