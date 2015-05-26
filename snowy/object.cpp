@@ -1,62 +1,99 @@
-#include <cmath>
+#include <Box2D/Box2D.h>
 #include "object.h"
-#include "errorHandler.h"
-#include "spriteData.h"
+#include "tools.h"
+
 
 Object& Object::operator=(const Object &rhs) {
     if(this != &rhs) {
+        name = rhs.name;
+        typ = rhs.typ;
         x = rhs.x;
         y = rhs.y;
         rot = rhs.rot;
+        theBody = rhs.theBody;
         spr = rhs.spr;
-        sprH = rhs.sprH;
-        sprW = rhs.sprW;
-        name = rhs.name;
+        prevPos = rhs.prevPos;
+        prevAng = rhs.prevAng;
     }
     return *this;
 }
 
-void Object::setPos(int newX, int newY) {
-    x = newX;
-    y = newY;
-    // change sprite's position too if the object has a sprite assigned to it.
-    if(spr != nullptr)
-        spr->setPos(newX - sprH, newY - sprW);
+Object::~Object() {
+
+}
+
+void Object::setPos(float newXpx, float newYpx) {
+    x = newXpx;
+    y = newYpx;
 }
 
 void Object::setRot(float rotationDegrees) {
     rot = rotationDegrees;
-    if(spr != nullptr)
-        spr->rotation(static_cast<double>(rot));
 }
 
-int Object::getXmid() const {
-    return x;
+void Object::setPrevPos(float newX, float newY) {
+    prevPos = std::make_pair(newX, newY);
 }
 
-int Object::getYmid() const {
-    return y;
+void Object::setPrevRot(float rotationDegrees) {
+    prevAng = rotationDegrees;
 }
 
-int Object::getX() const {
-    return x - sprH;
-}
-
-int Object::getY() const {
-    return y - sprW;
+std::pair<float, float> Object::getCenterPos() const {
+    return std::make_pair(x, y);
 }
 
 float Object::getRot() const {
     return rot;
 }
 
-void Object::assignSprite(Sprite* sprite) {
-    // all sprites are saved in the unordered_map in the Screen object.
-    spr = sprite;
-    sprH = static_cast<int>(round(sprite->getFrameSizeH() * 0.5f));
-    sprW = static_cast<int>(round(sprite->getFrameSizeW() * 0.5f));
+std::pair<float, float> Object::getPrevPos() const {
+    return prevPos;
 }
 
-const char* Object::getName() const {
+float Object::getPrevRot() const {
+    return prevAng;
+}
+
+Sprite* Object::getSprite() {
+    return spr;
+}
+
+int Object::assignSprite(Sprite* sprite) {
+    if(sprite == nullptr)
+        return 0;
+    spr = sprite;
+    return 1;
+}
+
+std::string Object::getName() const {
     return name;
+}
+
+int Object::getType() const {
+    return typ;
+}
+
+void Object::setType(int type) {
+    typ = type;
+}
+
+b2Body* Object::getBody() {
+    return theBody;
+}
+
+int Object::assignBody(b2Body* body) {
+    if(body == nullptr)
+        return 0;
+    theBody = body;
+    return 1;
+}
+
+int Object::destroyBody() {
+    if(theBody == nullptr)
+        return 0;
+    b2World* world = theBody->GetWorld();
+    world->DestroyBody(theBody);
+    theBody = nullptr;
+    return 1;
 }

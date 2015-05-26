@@ -1,5 +1,5 @@
 #include "screen.h"
-#include "errorHandler.h"
+#include "fontData.h"
 
 Screen::Screen() {
     // Init SDL Video
@@ -24,33 +24,51 @@ Screen::Screen() {
 	win = nullptr;
 	screenRend = nullptr;
 	screenTex = nullptr;
+    drawTex = nullptr;
 
 	cameraView.x = cameraView.y = cameraView.w = cameraView.h = 0;
 	rectDummy.x = rectDummy.y = rectDummy.w = rectDummy.h = 0;
+	fontObj = new Fonts();
 }
 
 Screen::~Screen() {
-    for(auto&& it : allSprTex)
+    delete fontObj;
+    for(auto&& it : allSprTex) {
 		SDL_DestroyTexture(it.second);
+		it.second = nullptr;
+    }
+    for(auto&& it : allSprObj) {
+        delete it.second;
+        it.second = nullptr;
+    }
 	allSprTex.clear();
+	allSprObj.clear();
     SDL_DestroyTexture(screenTex);
+    SDL_DestroyTexture(drawTex);
 	SDL_DestroyRenderer(screenRend);
 	SDL_DestroyWindow(win);
 	IMG_Quit();
 	TTF_Quit();
 }
 
-void Screen::makeWindow(int x, int y, int w, int h, const char* title, Uint32 pxFormat, Uint32 renderFlags, Uint32 winFlags) {
-	win = SDL_CreateWindow(title, x, y, w, h, winFlags);
+void Screen::makeWindow(int x, int y, int gameWidth, int gameHeight, int windowWidth, int windowHeight,
+                        std::string title, const char* filtering, Uint32 renderFlags, Uint32 winFlags, Uint32 pxFormat) {
+	win = SDL_CreateWindow(title.c_str(), x, y, windowWidth, windowHeight, winFlags);
 	if(win == nullptr) {
 		std::string errmsg = "SDL_CreateWindow error: " + std::string(SDL_GetError());
 		callError(errmsg);
 	}
-	screenRend = SDL_CreateRenderer(win, -1, (renderFlags | SDL_RENDERER_TARGETTEXTURE));
-	screenTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET, w, h);
+	screenRend = SDL_CreateRenderer(win, -1, (renderFlags | SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED));
+	screenTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET,gameWidth, gameHeight);
+	drawTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET, gameWidth, gameHeight);
+	//0 or nearest nearest pixel sampling
+	//1 or linear linear filtering (supported by OpenGL and Direct3D)
+	//2 or best anisotropic filtering (supported by Direct3D)
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, filtering);
+    SDL_RenderSetLogicalSize(screenRend, gameWidth, gameHeight);
 	cameraView.x = cameraView.y = 0;
-	cameraView.w = w;
-	cameraView.h = h;
+	cameraView.w = gameWidth;
+	cameraView.h = gameHeight;
 }
 
 SDL_Window* Screen::getWindow() {
@@ -61,33 +79,68 @@ SDL_Rect& Screen::getCamera() {
 	return cameraView;
 }
 
-void Screen::update() {
+bool Screen::isInCamera(const SDL_Rect* test) {
+    return SDL_IntersectRect(&cameraView, test, &rectDummy);
+}
+
+void Screen::renderScreen() {
+    SDL_SetRenderDrawColor(screenRend, 0, 0, 0, 255);
     SDL_RenderClear(screenRend);
     // render each sprite onto the screen texture
-    SDL_SetRenderTarget(screenRend, screenTex);
+    //SDL_SetRenderTarget(screenRend, screenTex); // For now just render it directly onto the renderer
+    SDL_SetRenderTarget(screenRend, NULL);
+    std::pair<float, float> sprOrign{};
+    Sprite* spr = nullptr;
     for(size_t i=0; i < spritesToRender.size(); ++i) {
-        // if it is within the camera's view render it.
-        if(SDL_IntersectRect(&cameraView, spritesToRender[i]->getPos(), &rectDummy)) {
-            SDL_SetTextureAlphaMod(allSprTex[spritesToRender[i]->getImgName()], spritesToRender[i]->getAlpha());
-            SDL_RenderCopyEx(screenRend, allSprTex[spritesToRender[i]->getImgName()],
-                    spritesToRender[i]->getCurrentFrame(), spritesToRender[i]->getPos(),
-                    spritesToRender[i]->getRotation(), NULL, spritesToRender[i]->getFlip());
-            spritesToRender[i]->setNextFrame();
-            SDL_SetTextureAlphaMod(allSprTex[spritesToRender[i]->getImgName()], 0);
+        spr = spritesToRender[i];
+        sprOrign = spr->getOrigin();
+        const SDL_Point orign = {sprOrign.first, sprOrign.second};
+        //if it is within the camera's view render it.
+        if(SDL_IntersectRect(&cameraView, spr->getPos(), &rectDummy)) {
+            SDL_SetTextureAlphaMod(allSprTex[spr->getImgName()], spr->getAlpha());
+            SDL_RenderCopyEx(screenRend, allSprTex[spr->getImgName()],
+                             spr->getCurrentFrame(), spr->getPos(),
+                             spr->getRotation(), &orign, spr->getFlip());
+            //set each sprite's next frame. Handled externally.
+            //spr->setNextFrame();
+            SDL_SetTextureAlphaMod(allSprTex[spr->getImgName()], 0);
         }
     }
+    //SDL_SetRenderDrawColor(screenRend, 0, 255, 0, 255);
+    //SDL_RenderDrawLine(screenRend, 0,0,100,100);
+}
+
+void Screen::showScreen() {
+    // render drawTex textures onto the screenTexture.
+    //SDL_RenderCopy(screenRend, drawTex, NULL, NULL);
+    // now clear drawTex for next set of drawings.
+    //SDL_SetRenderDrawColor(drawRend, 0, 0, 0, 255);
+    //SDL_RenderClear(drawRend);
+
     // render screen texture into the window.
-    SDL_SetRenderTarget(screenRend, NULL);
-    // Perhaps later implement so that can change screen's location/rotation etc. and multiple screens in one window etc?
-    // Or put everything into OpenGL3.0+ (e.g. SDL in OpenGL mode and render sprites to primitives, applying rotation primitives)?
-    SDL_RenderCopy(screenRend, screenTex, NULL, NULL);
+    //SDL_SetRenderTarget(screenRend, NULL);
+    //SDL_RenderCopy(screenRend, screenTex, NULL, NULL);
     SDL_RenderPresent(screenRend);
 }
 
-int Screen::loadImg(const char* imageName, const char* imageLocation) {
+void Screen::allRenderSpritesNextFrame() {
+    for(size_t i = 0; i < spritesToRender.size(); ++i) {
+        spritesToRender[i]->setNextFrame();
+    }
+}
+
+SDL_Renderer* Screen::getRenderer() {
+    return screenRend;
+}
+
+SDL_Texture* Screen::getDrawTex() {
+	return drawTex;
+}
+
+int Screen::loadImg(std::string imageName, std::string imageLocation) {
 	if(allSprTex.count(imageName) > 0)
 		return 0;
-	SDL_Surface* surface = IMG_Load(imageLocation);
+	SDL_Surface* surface = IMG_Load(imageLocation.c_str());
 	allSprTex[imageName] = SDL_CreateTextureFromSurface(screenRend, surface);
 	SDL_FreeSurface(surface);
 	if(allSprTex[imageName] == nullptr)
@@ -95,7 +148,7 @@ int Screen::loadImg(const char* imageName, const char* imageLocation) {
 	return 1;
 }
 
-int Screen::makeSprite(const char* spriteName, const char* imageName, int layer, SDL_Rect* framesize, int tileMarginOffSet, bool isAnimated, bool addToRender) {
+int Screen::makeSprite(std::string spriteName, std::string imageName, int layer, SDL_Rect* framesize, int tileMarginOffSet, bool isAnimated, bool addToRender) {
 	if(allSprTex.count(imageName) == 0)
 		callError("screen method makeSprite error: trying to load non-existing image, " + toStr(imageName));
 	if(allSprObj.count(spriteName) > 0)
@@ -108,22 +161,22 @@ int Screen::makeSprite(const char* spriteName, const char* imageName, int layer,
 		tmp.x = tmp.y = 0;
 		tmp.w = wid;
 		tmp.h = hei;
-		allSprObj[spriteName] = Sprite(spriteName, imageName, wid, hei, &tmp, layer, isAnimated, tileMarginOffSet);
+		allSprObj[spriteName] = new Sprite(spriteName, imageName, wid, hei, &tmp, layer, isAnimated, tileMarginOffSet);
 	} else
-		allSprObj[spriteName] = Sprite(spriteName, imageName, wid, hei, framesize, layer, isAnimated, tileMarginOffSet);
+		allSprObj[spriteName] = new Sprite(spriteName, imageName, wid, hei, framesize, layer, isAnimated, tileMarginOffSet);
 	if(addToRender) {
-        spritesToRender.push_back(&allSprObj[spriteName]);
+        spritesToRender.push_back(allSprObj[spriteName]);
         std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
 	}
 	return 1;
 }
 
-int Screen::addSpriteToRender(const char* spriteName) {
+int Screen::addSpriteToRender(std::string spriteName) {
 	if(allSprObj.count(spriteName) > 0) {
 		for(size_t i=0; i < spritesToRender.size(); ++i)
-			if(spritesToRender[i] == &allSprObj[spriteName])
+			if(spritesToRender[i] == allSprObj[spriteName])
 				return 0;
-        spritesToRender.push_back(&allSprObj[spriteName]);
+        spritesToRender.push_back(allSprObj[spriteName]);
         std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
         return 1;
 	}
@@ -131,10 +184,10 @@ int Screen::addSpriteToRender(const char* spriteName) {
 	return 0;
 }
 
-Sprite* Screen::spriteData(const char* spriteName) {
+Sprite* Screen::getSprite(std::string spriteName) {
 	if(allSprObj.count(spriteName) == 0)
 			return nullptr;
-	return &allSprObj[spriteName];
+	return allSprObj[spriteName];
 }
 
 std::vector<std::string> Screen::getAllSpriteNames() const{
@@ -158,35 +211,35 @@ std::vector<std::string> Screen::getRenderSpriteNames() const{
     return ret;
 }
 
-bool Screen::spriteExist(const char* name) const{
+bool Screen::spriteExist(std::string name) const{
 	return allSprObj.count(name) > 0;
 }
 
-bool Screen::textureExist(const char* name) const{
+bool Screen::textureExist(std::string name) const{
 	return allSprTex.count(name) > 0;
 }
 
-void Screen::changeLayer(const char* spriteName, int newLayerNumber) {
-	spriteData(spriteName)->setLayer(newLayerNumber);
+void Screen::changeLayer(std::string spriteName, int newLayerNumber) {
+	getSprite(spriteName)->setLayer(newLayerNumber);
 	sortTheRenderingLayers();
 }
 
-int Screen::duplicateSprite(const char* newName, const char* whichSprite, bool addToRender) {
+int Screen::duplicateSprite(std::string newName, std::string whichSprite, bool addToRender) {
 	if((allSprObj.count(whichSprite) == 0) || (allSprObj.count(newName) > 0))
 		return 0;
-	allSprObj[newName] = allSprObj[whichSprite];
-	allSprObj[newName].setName(newName);
-	if(addToRender) {
-        spritesToRender.push_back(&allSprObj[newName]);
+    allSprObj[newName] = new Sprite(*allSprObj[whichSprite]);
+    allSprObj[newName]->setName(newName);
+    if(addToRender) {
+        spritesToRender.push_back(allSprObj[newName]);
         std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
 	}
-	return 1;
+    return 1;
 }
 
-int Screen::removeSprite(const char* name) {
+int Screen::removeSprite(std::string name) {
 	if(allSprObj.count(name) > 0) {
 		for(size_t i=0; i < spritesToRender.size(); ++i)
-			if(spritesToRender[i] == &allSprObj[name]) {
+			if(spritesToRender[i] == allSprObj[name]) {
 				spritesToRender[i] = spritesToRender.back();
 				spritesToRender.pop_back();
 				std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
@@ -204,21 +257,22 @@ int Screen::clearScreen() {
     return 0;
 }
 
-int Screen::destroySprite(const char* name) {
+int Screen::destroySprite(std::string name) {
 	if(allSprObj.count(name) > 0) {
 		for(size_t i=0; i < spritesToRender.size(); ++i)
-			if(spritesToRender[i] == &allSprObj[name]) {
+			if(spritesToRender[i] == allSprObj[name]) {
 				spritesToRender[i] = spritesToRender.back();
 				spritesToRender.pop_back();
 				std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
 			}
+        delete allSprObj[name];
 		allSprObj.erase(name);
 		return 1;
 	}
     return 0;
 }
 
-int Screen::destroyImg(const char* name) {
+int Screen::destroyImg(std::string name) {
 	if(allSprTex.count(name) > 0) {
 		SDL_DestroyTexture(allSprTex[name]);
 		allSprTex.erase(name);
@@ -236,17 +290,17 @@ Screen& Screen::get() {
 
 //-----------------------FONT METHODS-----------------------------------
 
-int Screen::text(const char* name, std::string message, TTF_Font* fnt, SDL_Color color, int x, int y, int layer, int mode, bool renderImmediately) {
+int Screen::text(std::string name, std::string message, std::string fontName, SDL_Color color, int x, int y, int layer, int mode, bool renderImmediately) {
     //UTF8
-    if(fnt == nullptr)
-        callError("screen method text error for \"" + toStr(name) + "\": TTF_Font is nullptr.");
+    if(!fontObj->fontExists(fontName))
+        callError("screen method text error for \"" + toStr(name) + "\": Font name \"" + toStr(fontName) + "\"does not exist..");
     if(allSprTex.count(name) > 0)
 		return 0;
     SDL_Surface* txt = nullptr;
     if(mode == 0)
-        txt = TTF_RenderUTF8_Solid(fnt, message.c_str(), color);
+        txt = TTF_RenderUTF8_Solid(fontObj->getFont(fontName), message.c_str(), color);
     else if(mode == 1)
-        txt = TTF_RenderUTF8_Blended(fnt, message.c_str(), color);
+        txt = TTF_RenderUTF8_Blended(fontObj->getFont(fontName), message.c_str(), color);
     else
         callError("screen method text error for \"" + toStr(name) + "\": Invalid mode," + toStr(mode));
     allSprTex[name] = SDL_CreateTextureFromSurface(screenRend, txt);
@@ -255,6 +309,10 @@ int Screen::text(const char* name, std::string message, TTF_Font* fnt, SDL_Color
 		callError("screen method text error for \"" + toStr(name) + "\": " + std::string(TTF_GetError()));
     if(!makeSprite(name, name, layer, nullptr, 0, false, renderImmediately))
         callError("screen method text error for \"" + toStr(name) + "\": makeSprite failure, sprite name \"" + toStr(name) + "\" already exists.");
-    allSprObj[name].setPos(x,y);
+    allSprObj[name]->setPos(x,y);
     return 1;
+}
+
+Fonts* Screen::getFonts() {
+    return fontObj;
 }

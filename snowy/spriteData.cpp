@@ -1,5 +1,5 @@
 #include "spriteData.h"
-#include "errorHandler.h"
+#include "tools.h"
 #include <cmath>
 
 // empty sprite shell
@@ -11,10 +11,12 @@ Sprite::Sprite() :
 	currFrameRect.x = currFrameRect.y = currFrameRect.w = currFrameRect.h = 0;
 	posStretch.x = posStretch.y = posStretch.w = posStretch.h = 0;
 	offsetpx = 0;
+    centerPointX = 0;
+    centerPointY = 0;
 }
 
 // an actual sprite is being made
-Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int imgHeight,
+Sprite::Sprite(std::string spriteName, std::string imgName, int imgWidth, int imgHeight,
 		SDL_Rect* framesize, int layer, bool isAnimated, int spaceBetweenTiles)  :
 			totalW(imgWidth), totalH(imgHeight), onLayer(layer),
 			isAnim(isAnimated), offsetpx(spaceBetweenTiles), currFrame(0), currCustomFrame(0), rotAng(0), flip(SDL_FLIP_NONE),
@@ -65,20 +67,23 @@ Sprite::Sprite(const char* spriteName, const char* imgName, int imgWidth, int im
 	posStretch.w = frameSize.w;
 	posStretch.h = frameSize.h;
 
-  frameOrder.clear();
+    centerPointX = static_cast<float>(frameSize.w)/2.0f;
+    centerPointY = static_cast<float>(frameSize.h)/2.0f;
+
+    frameOrder.clear();
 }
 
 // Copy Constructor
 Sprite::Sprite(const Sprite& rhs) :
-	totalW(rhs.totalW), totalH(rhs.totalH), frameSize(rhs.frameSize),
+	name(rhs.name),	img(rhs.img), totalW(rhs.totalW), totalH(rhs.totalH), frameSize(rhs.frameSize),
 	onLayer(rhs.onLayer),isAnim(rhs.isAnim), offsetpx (rhs.offsetpx), currFrame(rhs.currFrame),
 	currCustomFrame(rhs.currCustomFrame), currFrameRect(rhs.currFrameRect),
 	maxFramesHor(rhs.maxFramesHor), maxFramesVer(rhs.maxFramesVer),
 		maxFrames(rhs.maxFrames), posStretch(rhs.posStretch), frameOrder(rhs.frameOrder),
 	rotAng(rhs.rotAng), flip(rhs.flip),	frameLonger(rhs.frameLonger), alphaVal(rhs.alphaVal) {
-	name = rhs.name;
-	img = rhs.img;
-	frameSuspended = 0;
+    frameSuspended = 0;
+    centerPointX = rhs.centerPointX;
+    centerPointY = rhs.centerPointY;
 }
 
 // Assignment Operator
@@ -106,24 +111,35 @@ Sprite& Sprite::operator=(const Sprite &rhs) {
 		frameLonger = rhs.frameLonger;
 		frameSuspended = 0;
 		alphaVal = rhs.alphaVal;
+        centerPointX = rhs.centerPointX;
+        centerPointY = rhs.centerPointY;
 	}
 	return *this;
 }
 
-int Sprite::getImageSizeW() const {
-	return totalW;
+std::pair<int, int> Sprite::getImageSize() const {
+	return std::make_pair(totalW, totalH);
 }
 
-int Sprite::getImageSizeH() const {
-	return totalH;
+std::pair<int, int>  Sprite::getFrameSize() const {
+	return std::make_pair(frameSize.w, frameSize.h);
 }
 
-int Sprite::getFrameSizeW() const {
-	return frameSize.w;
+int Sprite::getMargin() const {
+    return offsetpx;
 }
 
-int Sprite::getFrameSizeH() const {
-	return frameSize.h;
+std::pair<float,float> Sprite::getOrigin() const {
+    return std::make_pair(centerPointX, centerPointY);
+}
+
+void Sprite::setOrigin(float x, float y) {
+    centerPointX = x;
+    centerPointY = y;
+}
+
+bool Sprite::isAnimation() const {
+    return isAnim;
 }
 
 int Sprite::currentFrameNum() const {
@@ -186,16 +202,16 @@ void Sprite::disableCustomFrameOrder() {
 	frameOrder.clear();
 }
 
-const char* Sprite::getName() const {
+std::string Sprite::getName() const {
 	return name;
 }
 
-const char* Sprite::setName(const char* newName) {
+std::string Sprite::setName(std::string newName) {
     name = newName;
     return name;
 }
 
-const char* Sprite::getImgName() const {
+std::string Sprite::getImgName() const {
 	return img;
 }
 
@@ -211,6 +227,10 @@ const SDL_Rect* Sprite::getPos() const {
 	return &posStretch;
 }
 
+std::pair<int, int> Sprite::getPosInts() const {
+	return std::make_pair(posStretch.x, posStretch.y);
+}
+
 void Sprite::setPos(int x, int y) {
 	posStretch.x = x;
 	posStretch.y = y;
@@ -222,6 +242,8 @@ void Sprite::setStretch(int ws, int hs) {
 
 	posStretch.w = ws;
 	posStretch.h = hs;
+    centerPointX = static_cast<float>(ws)/2.0f;
+    centerPointY = static_cast<float>(hs)/2.0f;
 }
 
 void Sprite::resetStretch() {

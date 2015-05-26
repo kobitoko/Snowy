@@ -1,5 +1,5 @@
 #include "input.h"
-#include "errorHandler.h"
+#include "tools.h"
 
 Input::Input() {
 	if( SDL_Init(SDL_INIT_EVENTS) !=0) {
@@ -8,11 +8,50 @@ Input::Input() {
 	}
 }
 
+int Input::createEvent(Sint32 code, void* anyData) {
+    Uint32 custmEvntTyp = SDL_RegisterEvents(1);
+    if(custmEvntTyp == static_cast<Uint32>(-1))
+        return 0;
+    SDL_Event custmEvnt;
+    SDL_zero(custmEvnt);
+    custmEvnt.user.type = custmEvntTyp;
+    custmEvnt.user.code = code;
+    custmEvnt.user.data1 = anyData;
+    custmEvnt.user.data2 = nullptr;
+    SDL_PushEvent(&custmEvnt);
+    return 1;
+}
+
+int Input::addEventListener(Sint32 code, void (*callbackFunc)(void*)) {
+    if(evList.count(code) > 0)
+        return 0;
+    evList[code] = callbackFunc;
+    return 1;
+}
+
+int Input::removeEventListener(Sint32 code) {
+    if(evList.count(code) == 0)
+        return 0;
+    evList.erase(code);
+    return 1;
+}
+
 void Input::updateInput() {
 	while(SDL_PollEvent(&event)) {
 		switch(event.type) {
 		// To do: Handle more event types https://wiki.libsdl.org/SDL_EventType
 		//  and https://wiki.libsdl.org/CategoryGameController
+
+        // custom user events.
+        case (SDL_USEREVENT) : {
+            if(!evList.empty()) {
+                for(auto && it : evList) {
+                    if(it.first == SDL_USEREVENT)
+                        (it.second)(event.user.data1);
+                }
+            }
+            break;
+        }
 
 		// Keyboard events
 		case (SDL_KEYDOWN): {

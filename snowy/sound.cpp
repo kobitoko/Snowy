@@ -1,5 +1,5 @@
 #include "sound.h"
-#include "errorHandler.h"
+#include "tools.h"
 
 Sound::Sound() {
 	if(SDL_Init(SDL_INIT_AUDIO) != 0) {

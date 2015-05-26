@@ -1,11 +1,16 @@
 #pragma once
-#include "errorHandler.h"
+#include "tools.h"
 #include "input.h"
 #include "screen.h"
 #include "spriteData.h"
+#include "fontData.h"
 #include "sound.h"
 #include "object.h"
 #include "objectManager.h"
 #include "physics.h"
-#include "timer.h"
+#include "hitTest.h"
+#include "draw.h"
+#include "updater.h"
+#include "camera.h"
+#include "network.h"
 

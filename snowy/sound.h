@@ -2,34 +2,35 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <map>
+#include <string>
 
 class Sound {
 public:
-	// returns a reference to the sound object. By it has 8 channels to play sounds on. Music has its own channel.
+	/// returns a reference to the sound object. By it has 8 channels to play sounds on. Music has its own channel.
     Sound();
 
 	~Sound();
 
 	// Music
 
-	// loads music into memory, returns 0 if musicName already exists.
+	/// loads music into memory, returns 0 if musicName already exists.
 	int loadMusic(const char* musicName, const char* fileName);
 
-	//returns music to do stuff with using SDL_Mixer
+	///returns music to do stuff with using SDL_Mixer
 	Mix_Music* getMusic(const char* bgmName);
 
-	// removes music from memory.
+	/// removes music from memory.
 	void removeMusic(const char* name);
 
 	// Sound Effects
 
-	// loads a sound into memory, returns 0 if musicName already exists.
+	/// loads a sound into memory, returns 0 if musicName already exists.
 	int loadSFX(const char* musicName, const char* fileName);
 
-	//returns a sound to do stuff with using SDL_Mixer
+	///returns a sound to do stuff with using SDL_Mixer
 	Mix_Chunk* getSFX(const char* bgmName);
 
-	// removes a sound from memory.
+	/// removes a sound from memory.
 	void removeSFX(const char* name);
 
 private:
@@ -38,9 +39,9 @@ private:
 	int openedAudio;
 
 	// music
-	std::map<const char*,Mix_Music*> bgm;
+	std::map<std::string,Mix_Music*> bgm;
 
 	// sound effect
-	std::map<const char*,Mix_Chunk*> sfx;
+	std::map<std::string,Mix_Chunk*> sfx;
 
 };
