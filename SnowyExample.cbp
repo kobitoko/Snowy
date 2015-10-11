@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="SnowyExample" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Snowy2Dd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-std=c++11" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add directory="C:/TDM-GCC-32/bin" />
+				</Compiler>
+				<Linker>
+					<Add option="-lmingw32" />
+					<Add option="-lSDL2main" />
+					<Add option="-lSDL2" />
+					<Add option="-lSDL2_image" />
+					<Add option="-lSDL2_mixer" />
+					<Add option="-lSDL2_ttf" />
+					<Add option="-lSDL2_gfx" />
+					<Add option="-lSDL2_net" />
+					<Add option="-lliquidfun" />
+					<Add directory="C:/TDM-GCC-32/lib" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Snowy2D" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add directory="C:/TDM-GCC-32/bin" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-lmingw32" />
+					<Add option="-lSDL2main" />
+					<Add option="-lSDL2" />
+					<Add option="-lSDL2_image" />
+					<Add option="-lSDL2_mixer" />
+					<Add option="-lSDL2_ttf" />
+					<Add option="-lSDL2_gfx" />
+					<Add option="-lSDL2_net" />
+					<Add option="-lliquidfun" />
+					<Add directory="C:/TDM-GCC-32/lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="example/game.h" />
+		<Unit filename="example/gameDestroyers.cpp" />
+		<Unit filename="example/gameEvents.cpp" />
+		<Unit filename="example/gameInputs.cpp" />
+		<Unit filename="example/gameLoaders.cpp" />
+		<Unit filename="example/gameMain.cpp" />
+		<Unit filename="example/gameUpdates.cpp" />
+		<Unit filename="snowy/camera.cpp" />
+		<Unit filename="snowy/camera.h" />
+		<Unit filename="snowy/draw.cpp" />
+		<Unit filename="snowy/draw.h" />
+		<Unit filename="snowy/fontData.cpp" />
+		<Unit filename="snowy/fontData.h" />
+		<Unit filename="snowy/hitTest.cpp" />
+		<Unit filename="snowy/hitTest.h" />
+		<Unit filename="snowy/input.cpp" />
+		<Unit filename="snowy/input.h" />
+		<Unit filename="snowy/network.cpp" />
+		<Unit filename="snowy/network.h" />
+		<Unit filename="snowy/object.cpp" />
+		<Unit filename="snowy/object.h" />
+		<Unit filename="snowy/objectManager.cpp" />
+		<Unit filename="snowy/objectManager.h" />
+		<Unit filename="snowy/physics.cpp" />
+		<Unit filename="snowy/physics.h" />
+		<Unit filename="snowy/screen.cpp" />
+		<Unit filename="snowy/screen.h" />
+		<Unit filename="snowy/snowy.h" />
+		<Unit filename="snowy/sound.cpp" />
+		<Unit filename="snowy/sound.h" />
+		<Unit filename="snowy/spriteData.cpp" />
+		<Unit filename="snowy/spriteData.h" />
+		<Unit filename="snowy/tools.cpp" />
+		<Unit filename="snowy/tools.h" />
+		<Unit filename="snowy/updater.cpp" />
+		<Unit filename="snowy/updater.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
