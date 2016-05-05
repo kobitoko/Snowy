@@ -1,6 +1,8 @@
 #include "screen.h"
 #include "fontData.h"
 
+// OpenGL tutorial followed: http://headerphile.com/sdl2/opengl-part-1-sdl-opengl-awesome/
+
 Screen::Screen() {
     // Init SDL Video
 	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -25,6 +27,7 @@ Screen::Screen() {
 	screenRend = nullptr;
 	screenTex = nullptr;
     drawTex = nullptr;
+    glContext = NULL;
 
 	cameraView.x = cameraView.y = cameraView.w = cameraView.h = 0;
 	rectDummy.x = rectDummy.y = rectDummy.w = rectDummy.h = 0;
@@ -43,6 +46,7 @@ Screen::~Screen() {
     }
 	allSprTex.clear();
 	allSprObj.clear();
+	SDL_GL_DeleteContext(glContext);
     SDL_DestroyTexture(screenTex);
     SDL_DestroyTexture(drawTex);
 	SDL_DestroyRenderer(screenRend);
@@ -53,11 +57,34 @@ Screen::~Screen() {
 
 void Screen::makeWindow(int x, int y, int gameWidth, int gameHeight, int windowWidth, int windowHeight,
                         std::string title, const char* filtering, Uint32 renderFlags, Uint32 winFlags, Uint32 pxFormat) {
-	win = SDL_CreateWindow(title.c_str(), x, y, windowWidth, windowHeight, winFlags);
+	win = SDL_CreateWindow(title.c_str(), x, y, windowWidth, windowHeight, winFlags | SDL_WINDOW_OPENGL);
 	if(win == nullptr) {
 		std::string errmsg = "SDL_CreateWindow error: " + std::string(SDL_GetError());
 		callError(errmsg);
 	}
+
+	// Connect the rendering context.
+    glContext = SDL_GL_CreateContext(win);
+
+	// Put in own fucntion setAttributes. Make sure this all is called before first window is created!
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    //MSAA:
+    //the number of buffers used for multisample anti-aliasing; defaults to 0, set to  1 to enable
+    //SDL_GL_MULTISAMPLEBUFFERS
+
+    //the number of samples used around the current pixel used for multisample anti-aliasing; defaults to 0; typical values 2 and 4.
+    //SDL_GL_MULTISAMPLESAMPLES
+
+    // 0 = immediate update, 1 = VSYNC, -1 = late swap tearing (not all supported, if not supported, do 1).
+    SDL_GL_SetSwapInterval(0);
+
+    glewExperimental = GL_TRUE;
+    glewInit();
+
 	screenRend = SDL_CreateRenderer(win, -1, (renderFlags | SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED));
 	screenTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET,gameWidth, gameHeight);
 	drawTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET, gameWidth, gameHeight);
@@ -84,6 +111,10 @@ bool Screen::isInCamera(const SDL_Rect* test) {
 }
 
 void Screen::renderScreen() {
+
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     SDL_SetRenderDrawColor(screenRend, 0, 0, 0, 255);
     SDL_RenderClear(screenRend);
     // render each sprite onto the screen texture
@@ -108,6 +139,7 @@ void Screen::renderScreen() {
     }
     //SDL_SetRenderDrawColor(screenRend, 0, 255, 0, 255);
     //SDL_RenderDrawLine(screenRend, 0,0,100,100);
+
 }
 
 void Screen::showScreen() {
@@ -120,7 +152,9 @@ void Screen::showScreen() {
     // render screen texture into the window.
     //SDL_SetRenderTarget(screenRend, NULL);
     //SDL_RenderCopy(screenRend, screenTex, NULL, NULL);
-    SDL_RenderPresent(screenRend);
+
+    //SDL_RenderPresent(screenRend);
+    SDL_GL_SwapWindow(win);
 }
 
 void Screen::allRenderSpritesNextFrame() {

@@ -9,6 +9,9 @@
 #include "spriteData.h"
 #include "tools.h"
 
+#define GL3_PROTOTYPES 1
+#include <GL/glew.h>
+
 class Fonts;
 
 class Screen {
@@ -137,6 +140,8 @@ private:
 	SDL_Renderer *screenRend;
 	SDL_Texture *screenTex;
 	SDL_Texture *drawTex;
+
+	SDL_GLContext glContext;
 
     // functor for sort by layers, returns true if lhs is smaller than rhs.
     class isLessLayer{
