@@ -12,14 +12,16 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-std=c++11" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
+					<Add option="-std=c++11" />
 					<Add option="-g" />
-					<Add directory="C:/TDM-GCC-32/bin" />
+					<Add directory="C:/msys64/mingw32/bin" />
 				</Compiler>
 				<Linker>
 					<Add option="-lmingw32" />
+					<Add option="-lopengl32" />
+					<Add option="-lglew32" />
 					<Add option="-lSDL2main" />
 					<Add option="-lSDL2" />
 					<Add option="-lSDL2_image" />
@@ -28,7 +30,7 @@
 					<Add option="-lSDL2_gfx" />
 					<Add option="-lSDL2_net" />
 					<Add option="-lliquidfun" />
-					<Add directory="C:/TDM-GCC-32/lib" />
+					<Add directory="C:/msys64/mingw32/lib" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -38,14 +40,16 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
-					<Add directory="C:/TDM-GCC-32/bin" />
+					<Add option="-std=c++11" />
+					<Add directory="C:/msys64/mingw32/bin" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 					<Add option="-lmingw32" />
+					<Add option="-lopengl32" />
+					<Add option="-lglew32" />
 					<Add option="-lSDL2main" />
 					<Add option="-lSDL2" />
 					<Add option="-lSDL2_image" />
@@ -54,7 +58,7 @@
 					<Add option="-lSDL2_gfx" />
 					<Add option="-lSDL2_net" />
 					<Add option="-lliquidfun" />
-					<Add directory="C:/TDM-GCC-32/lib" />
+					<Add directory="C:/msys64/mingw32/lib" />
 				</Linker>
 			</Target>
 		</Build>

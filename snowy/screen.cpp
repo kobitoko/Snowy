@@ -1,7 +1,9 @@
 #include "screen.h"
 #include "fontData.h"
 
-// OpenGL tutorial followed: http://headerphile.com/sdl2/opengl-part-1-sdl-opengl-awesome/
+// OpenGL tutorial used:
+// http://headerphile.com/sdl2/opengl-part-1-sdl-opengl-awesome/
+// http://lazyfoo.net/tutorials/SDL/51_SDL_and_modern_opengl/index.php
 
 Screen::Screen() {
     // Init SDL Video
