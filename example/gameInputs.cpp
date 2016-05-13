@@ -56,8 +56,8 @@ void Game::movePlayer() {
 }
 
 void Game::testParticles() {
+    SDL_Color colr = {0,0,0,255};
     std::pair<Sint32, Sint32> coords = in->getMouseValues(MouseVals::COORDS);
-    scr->getSprite("mouseTxt")->setPos(coords.first, coords.second);
     int32 bucketSize = static_cast<int32>(bucket.size());
     int32 particleCounts = phy->getParticles()->GetParticleCount();
     if(bucketSize != particleCounts) {
@@ -87,6 +87,9 @@ void Game::testParticles() {
 	}
 	// make water
 	if(in->mouseKeyStatus(SDL_BUTTON_LEFT)) {
+        // Update text
+        scr->text("mouseTxt", "Pouring water!", "font2", colr, 0, 0, 10, 0, true);
+
 		// play water sound if it is not already playing
 		if(!Mix_Playing(1))
 			Mix_PlayChannel(1, snd->getSFX("waterSnd"), 0);
@@ -98,8 +101,14 @@ void Game::testParticles() {
 		pd.position.Set(coords.first * PXTOM, coords.second * PXTOM);
 		phy->getParticles()->CreateParticle(pd);
 
+	}else if(in->mouseKeyStatus(SDL_BUTTON_RIGHT)) {
+	    scr->text("mouseTxt", "Not RMB, it is the LMB!", "font2", colr, 0, 0, 10, 0, true);
 	}else if(!in->mouseKeyStatus(SDL_BUTTON_LEFT)) {
+	    // Reset text
+	    scr->text("mouseTxt", "Click & hold for \"water\"", "font2", colr, 0, 0, 10, 0, true);
 		// stop water sound if not holding left mouse button.
 		Mix_HaltChannel(1);
 	}
+	// Mouse text follows mouse.
+	scr->getSprite("mouseTxt")->setPos(coords.first, coords.second);
 }

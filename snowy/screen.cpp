@@ -294,8 +294,10 @@ int Screen::text(std::string name, std::string message, std::string fontName, SD
     //UTF8
     if(!fontObj->fontExists(fontName))
         callError("screen method text error for \"" + toStr(name) + "\": Font name \"" + toStr(fontName) + "\"does not exist..");
+    //If already exists, we're updating it so destroy old one. (slow cuz destroying here.)
     if(allSprTex.count(name) > 0)
-		return 0;
+		SDL_DestroyTexture(allSprTex[name]);
+
     SDL_Surface* txt = nullptr;
     if(mode == 0)
         txt = TTF_RenderUTF8_Solid(fontObj->getFont(fontName), message.c_str(), color);
@@ -307,8 +309,8 @@ int Screen::text(std::string name, std::string message, std::string fontName, SD
     SDL_FreeSurface(txt);
 	if(allSprTex[name] == nullptr)
 		callError("screen method text error for \"" + toStr(name) + "\": " + std::string(TTF_GetError()));
-    if(!makeSprite(name, name, layer, nullptr, 0, false, renderImmediately))
-        callError("screen method text error for \"" + toStr(name) + "\": makeSprite failure, sprite name \"" + toStr(name) + "\" already exists.");
+    // Just updating an exisitng texture. Thus ignore error returns of already existing sprite.
+    makeSprite(name, name, layer, nullptr, 0, false, renderImmediately);
     allSprObj[name]->setPos(x,y);
     return 1;
 }
