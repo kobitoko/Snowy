@@ -290,7 +290,7 @@ Screen& Screen::get() {
 
 //-----------------------FONT METHODS-----------------------------------
 
-int Screen::text(std::string name, std::string message, std::string fontName, SDL_Color color, int x, int y, int layer, int mode, bool renderImmediately) {
+void Screen::text(std::string name, std::string message, std::string fontName, SDL_Color color, int x, int y, int layer, int mode, bool renderImmediately) {
     //UTF8
     if(!fontObj->fontExists(fontName))
         callError("screen method text error for \"" + toStr(name) + "\": Font name \"" + toStr(fontName) + "\"does not exist..");
@@ -312,7 +312,6 @@ int Screen::text(std::string name, std::string message, std::string fontName, SD
     // Just updating an exisitng texture. Thus ignore error returns of already existing sprite.
     makeSprite(name, name, layer, nullptr, 0, false, renderImmediately);
     allSprObj[name]->setPos(x,y);
-    return 1;
 }
 
 Fonts* Screen::getFonts() {
