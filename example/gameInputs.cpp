@@ -88,7 +88,7 @@ void Game::testParticles() {
 	// make water
 	if(in->mouseKeyStatus(SDL_BUTTON_LEFT)) {
         // Update text
-        scr->text("mouseTxt", "Pouring water!", "font2", colr, 0, 0, 10, 0, true);
+        scr->text("mouseTxt", "Pouring water!", "font2", colr, 0, 0, 10, 1);
 
 		// play water sound if it is not already playing
 		if(!Mix_Playing(1))
@@ -102,10 +102,10 @@ void Game::testParticles() {
 		phy->getParticles()->CreateParticle(pd);
 
 	}else if(in->mouseKeyStatus(SDL_BUTTON_RIGHT)) {
-	    scr->text("mouseTxt", "Not RMB, it is the LMB!", "font2", colr, 0, 0, 10, 0, true);
+	    scr->text("mouseTxt", "Not RMB, it is the LMB!", "font2", colr, 0, 0, 10, 1);
 	}else if(!in->mouseKeyStatus(SDL_BUTTON_LEFT)) {
 	    // Reset text
-	    scr->text("mouseTxt", "Click & hold for \"water\"", "font2", colr, 0, 0, 10, 0, true);
+	    scr->text("mouseTxt", "Click & hold for \"water\"", "font2", colr, 0, 0, 10, 1);
 		// stop water sound if not holding left mouse button.
 		Mix_HaltChannel(1);
 	}

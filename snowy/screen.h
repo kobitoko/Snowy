@@ -123,7 +123,7 @@ public:
     /// 0=Solid (quick and dirty), this is the default.
     /// 1=Blended(Slow, but nicely blended over another image).
     /// returns 0 on failure, and 1 on success
-    int text(std::string name, std::string message, std::string fontName, SDL_Color color, int x, int y, int layer, int mode, bool renderImmediately);
+    int text(std::string name, std::string message, std::string fontName, SDL_Color color, int x = 0, int y = 0, int layer = 0, int mode = 0, bool renderImmediately = true);
 
     /// returns the screen's font container so you can create and store fonts. And recall them easily.
     Fonts* getFonts();
