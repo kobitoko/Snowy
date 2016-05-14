@@ -117,6 +117,8 @@ public:
 		  std::sort(spritesToRender.begin(), spritesToRender.end(), lessLayer);
 	}
 
+    SDL_Texture* getTexture(std::string imageName);
+
     //-----------------------FONT METHODS-----------------------------------
 
 	/// render text into a sprite with given TTF_Font using a render mode:
@@ -127,6 +129,10 @@ public:
     /// returns the screen's font container so you can create and store fonts. And recall them easily.
     Fonts* getFonts();
 
+    //-----------------------SPRITE BATCH METHODS-----------------------------------
+
+    void createSpriteBatch(std::unordered_map<std::string, SDL_Texture*> toBatch);
+
 private:
 	// don't allow copy construct.
 	Screen(const Screen& rhs){}
@@ -136,8 +142,9 @@ private:
 	SDL_Renderer *screenRend;
 	SDL_Texture *screenTex;
 	SDL_Texture *drawTex;
+	Uint32 pixelFormat;
 
-    // functor for sort by layers, returns true if lhs is smaller than rhs.
+    /// functor for sort by layers, returns true if lhs is smaller than rhs.
     class isLessLayer{
     public:
         bool operator() (const Sprite* lhs, const Sprite* rhs) const {
@@ -145,10 +152,40 @@ private:
         }
     } lessLayer;
 
+    /// Sprite Batch allows one giant texture to contain the textures that different sprites needs.
+    class SpriteBatch
+    {
+    public:
+        SpriteBatch();
+        SpriteBatch(std::unordered_map<std::string, SDL_Texture*> toBatch, SDL_Renderer* rendr, Uint32 pxfrmt);
+        SpriteBatch& operator=(const SpriteBatch &rhs);
+        ~SpriteBatch();
+
+        /// Create a batch texture using the texture's imageName and it's texture.
+        /// It calls errors if anything internal fails such as creating SDL_Texture.
+        void createSprBatch(std::unordered_map<std::string, SDL_Texture*> toBatch, SDL_Renderer* rendr, Uint32 pxfrmt);
+
+        /// Returns the texture containing the batch of a bunch of sprite's textures.
+        SDL_Texture* getSpriteBatch() const ;
+
+        /// Check if sprites texture exist.
+        bool batchHasImg(std::string imageName);
+
+        /// Get the sprite texture's location and size on this batch
+        /// Calls Error if name doesn't exist.
+        SDL_Rect getSpriteBatchImg(std::string imageName);
+
+    private:
+        SDL_Texture* batchImg;
+        std::unordered_map<std::string, SDL_Rect> singleTexturePos;
+    };
+
+
 	std::unordered_map<std::string, SDL_Texture*> allSprTex;
 	std::unordered_map<std::string, Sprite*> allSprObj;
 	std::vector<Sprite*> spritesToRender;
+	std::unordered_map<std::string, int> batchIndex;
+	std::vector<SpriteBatch*> batches;
 
     Fonts* fontObj;
 };
-

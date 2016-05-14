@@ -1,6 +1,8 @@
 #include "screen.h"
 #include "fontData.h"
 
+#include <iostream>
+
 Screen::Screen() {
     // Init SDL Video
 	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -58,9 +60,10 @@ void Screen::makeWindow(int x, int y, int gameWidth, int gameHeight, int windowW
 		std::string errmsg = "SDL_CreateWindow error: " + std::string(SDL_GetError());
 		callError(errmsg);
 	}
+	pixelFormat = pxFormat;
 	screenRend = SDL_CreateRenderer(win, -1, (renderFlags | SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED));
-	screenTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET,gameWidth, gameHeight);
-	drawTex = SDL_CreateTexture(screenRend, pxFormat, SDL_TEXTUREACCESS_TARGET, gameWidth, gameHeight);
+	screenTex = SDL_CreateTexture(screenRend, pixelFormat, SDL_TEXTUREACCESS_TARGET,gameWidth, gameHeight);
+	drawTex = SDL_CreateTexture(screenRend, pixelFormat, SDL_TEXTUREACCESS_TARGET, gameWidth, gameHeight);
 	//0 or nearest nearest pixel sampling
 	//1 or linear linear filtering (supported by OpenGL and Direct3D)
 	//2 or best anisotropic filtering (supported by Direct3D)
@@ -97,10 +100,26 @@ void Screen::renderScreen() {
         const SDL_Point orign = {sprOrign.first, sprOrign.second};
         //if it is within the camera's view render it.
         if(SDL_IntersectRect(&cameraView, spr->getPos(), &rectDummy)) {
-            SDL_SetTextureAlphaMod(allSprTex[spr->getImgName()], spr->getAlpha());
-            SDL_RenderCopyEx(screenRend, allSprTex[spr->getImgName()],
+            if(batchIndex.count(spr->getImgName()) > 0) {
+                SpriteBatch* sb = batches[batchIndex[spr->getImgName()]];
+                SDL_SetTextureAlphaMod(sb->getSpriteBatch(), spr->getAlpha());
+                SDL_Rect r;
+                r.x = sb->getSpriteBatchImg(spr->getImgName()).x + spr->getCurrentFrame()->x;
+                r.y = sb->getSpriteBatchImg(spr->getImgName()).y + spr->getCurrentFrame()->y;
+                r.w = spr->getCurrentFrame()->w;
+                r.h = spr->getCurrentFrame()->h;
+                SDL_RenderCopyEx(screenRend, sb->getSpriteBatch(),
+                             &r, spr->getPos(),
+                             spr->getRotation(), &orign, spr->getFlip());
+                int wid = 0;
+                int hei = 0;
+                SDL_QueryTexture(sb->getSpriteBatch(), NULL, NULL, &wid, &hei);
+            }else{
+                SDL_SetTextureAlphaMod(allSprTex[spr->getImgName()], spr->getAlpha());
+                SDL_RenderCopyEx(screenRend, allSprTex[spr->getImgName()],
                              spr->getCurrentFrame(), spr->getPos(),
                              spr->getRotation(), &orign, spr->getFlip());
+            }
             //set each sprite's next frame. Handled externally.
             //spr->setNextFrame();
             SDL_SetTextureAlphaMod(allSprTex[spr->getImgName()], 0);
@@ -281,6 +300,10 @@ int Screen::destroyImg(std::string name) {
 	return 0;
 }
 
+SDL_Texture* Screen::getTexture(std::string imageName) {
+    return allSprTex[imageName];
+}
+
 /*
 Screen& Screen::get() {
 	static Screen screenObj;
@@ -317,3 +340,90 @@ void Screen::text(std::string name, std::string message, std::string fontName, S
 Fonts* Screen::getFonts() {
     return fontObj;
 }
+
+//-------------------------SPRITE BATCH METHODS------------------------------------
+
+void Screen::createSpriteBatch(std::unordered_map<std::string, SDL_Texture*> toBatch) {
+    Screen::SpriteBatch* sb = new SpriteBatch();
+    sb->createSprBatch(toBatch, screenRend, pixelFormat);
+    batches.push_back(sb);
+    for(auto &&it : toBatch) {
+        batchIndex[it.first] = batches.size()-1;
+    }
+}
+
+Screen::SpriteBatch::SpriteBatch(){
+    batchImg = nullptr;
+}
+
+Screen::SpriteBatch::SpriteBatch(std::unordered_map<std::string, SDL_Texture*> toBatch, SDL_Renderer* rendr, Uint32 pxfrmt){
+    batchImg = nullptr;
+    createSprBatch(toBatch, rendr, pxfrmt);
+}
+
+Screen::SpriteBatch& Screen::SpriteBatch::operator=(const Screen::SpriteBatch &rhs) {
+    if(&rhs == this)
+        return *this;
+    this->batchImg = rhs.batchImg;
+    this->singleTexturePos = rhs.singleTexturePos;
+    return *this;
+}
+
+Screen::SpriteBatch::~SpriteBatch(){
+    //dtor
+    SDL_DestroyTexture(batchImg);
+}
+
+void Screen::SpriteBatch::createSprBatch(std::unordered_map<std::string, SDL_Texture*> toBatch, SDL_Renderer* rendr, Uint32 pxfrmt) {
+    // Get the total size of the batch image
+    int sizeH = 0;
+    int sizeW = 0;
+    for(auto&& it : toBatch) {
+        int h = 0;
+        int w = 0;
+        SDL_QueryTexture(it.second, NULL, NULL, &w, &h);
+        sizeH += h;
+        if(sizeW < w)
+            sizeW = w;
+    }
+
+    // Create the batch texture
+    batchImg = SDL_CreateTexture(rendr, pxfrmt, SDL_TEXTUREACCESS_TARGET, sizeW+toBatch.size(), sizeH+toBatch.size());
+    if(!batchImg)
+        callError("Screen::SpriteBatch method createSpriteBatch error: Could not create batchImg texture, " + std::string(SDL_GetError()));
+
+    // Render the textures onto it.
+    int currentH = 0;
+    SDL_SetRenderTarget(rendr, batchImg);
+    for(auto&& it : toBatch) {
+        int w = 0;
+        int h = 0;
+        SDL_Rect r = {0, 0, 0, 0};
+        SDL_QueryTexture(it.second, NULL, NULL, &w, &h);
+        r.y = currentH;
+        r.w = w;
+        r.h = h;
+        SDL_RenderCopy(rendr, it.second, NULL, &r);
+        singleTexturePos[it.first] = r;
+        currentH += 1 + r.h;
+
+    }
+    SDL_SetRenderTarget(rendr, NULL);
+}
+
+SDL_Texture* Screen::SpriteBatch::getSpriteBatch() const {
+    return batchImg;
+}
+
+bool Screen::SpriteBatch::batchHasImg(std::string imageName) {
+    if(singleTexturePos.count(imageName) > 0)
+        return true;
+    return false;
+}
+
+SDL_Rect Screen::SpriteBatch::getSpriteBatchImg(std::string imageName){
+    if(singleTexturePos.count(imageName) == 0)
+		callError("spriteBatch method getSpriteBatchImg\"" + toStr(imageName) + "\" error: name not found in singleTexturePos");
+    return singleTexturePos[imageName];
+}
+

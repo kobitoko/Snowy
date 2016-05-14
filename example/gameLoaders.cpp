@@ -28,14 +28,6 @@ void Game::loadMySprites() {
 	scr->getSprite("tileSetAni")->customFrameOrder(framez);
     scr->getSprite("tileSetAni")->delayFrames(30);
 
-    // test font
-    scr->getFonts()->createFont("font1", fontLoc, 18,0);
-    scr->getFonts()->createFont("font2", fontLoc, 11,0);
-    // R, G, B, alpha.
-    SDL_Color colr = {0,0,0,255};
-    scr->text("testTxt1", "Hello there!", "font1", colr, 200, 50, 0, 0, true);
-    scr->text("mouseTxt", "Click & hold for \"water\"", "font2", colr, 0, 0, 10, 0, true);
-
 	// the box
 	scr->loadImg("boxImg", boxSrc);
 	scr->makeSprite("box","boxImg", 1);
@@ -66,6 +58,24 @@ void Game::loadMySprites() {
 	scr->getSprite("meteorThe2nd")->setPos(100,50);
 	scr->changeLayer("meteorThe2nd", 3);
 
+	// Batch them up.
+	std::unordered_map<std::string, SDL_Texture*> toBatch;
+    for(auto &&it : scr->getAllImageNames()) {
+        toBatch[it] = scr->getTexture(it);
+    }
+
+    // not good atm, screen resize = everything black, also no alpha for some reason.
+	//scr->createSpriteBatch(toBatch);
+
+    // test font
+    scr->getFonts()->createFont("font1", fontLoc, 18,0);
+    scr->getFonts()->createFont("font2", fontLoc, 11,0);
+    // R, G, B, alpha.
+    SDL_Color colr = {0,0,0,255};
+    scr->text("testTxt1", "Hello there!", "font1", colr, 200, 50, 0, 0, true);
+    scr->text("mouseTxt", "Click & hold for \"water\"", "font2", colr, 0, 0, 10, 0, true);
+
+
     // print all the images and sprites.
     std::vector<std::string> a = scr->getAllSpriteNames();
     std::cout << "-----------allSprites at startup-----------" << std::endl;
@@ -81,6 +91,10 @@ void Game::loadMySprites() {
 	std::cout << "-----------RenderedSprites at startup-----------" << std::endl;
     for(auto& cc : c)
         std::cout << cc << std::endl;
+
+	std::cout << "-----------Batched images-----------" << std::endl;
+    for(auto& bathd : toBatch)
+        std::cout << bathd.first << std::endl;
 }
 
 void Game::loadMyPhysics() {
