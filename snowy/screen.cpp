@@ -44,8 +44,8 @@ Screen::~Screen() {
         it.second = nullptr;
     }
     for(auto&& it : batches) {
-        delete it.second;
-        it.second = nullptr;
+        delete it;
+        it = nullptr;
     }
 	allSprTex.clear();
 	allSprObj.clear();
